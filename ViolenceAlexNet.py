@@ -1,3 +1,7 @@
+import torch.nn as nn
+from torchvision import models
+from freezeModel import * 
+
 class ViolenceModel(nn.Module):
   def __init__(self, seqLen):
       super(ViolenceModel, self).__init__()
