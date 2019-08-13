@@ -7,7 +7,7 @@ class ViolenceModel(nn.Module):
       super(ViolenceModel, self).__init__()
       self.seqLen = seqLen
       self.alexnet = models.alexnet(pretrained=True)
-      
+      feature_extract = True
       set_parameter_requires_grad(self.alexnet, feature_extract)
       
       self.convNet = nn.Sequential(*list(self.alexnet.features.children()))
