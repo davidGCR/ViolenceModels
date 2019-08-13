@@ -34,7 +34,7 @@ class ViolenceDatasetVideos(Dataset):
     frames_list.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
     total_frames = len(frames_list)
     
-    sequences = [frames_list[x:x+seqLen] for x in range(0, total_frames, seqLen)]
+    sequences = [frames_list[x:x+self.seqLen] for x in range(0, total_frames, self.seqLen)]
     
     inpSeq = []
     
