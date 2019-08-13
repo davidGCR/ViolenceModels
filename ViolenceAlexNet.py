@@ -1,6 +1,6 @@
 import torch.nn as nn
 from torchvision import models
-import freezeModel.set_parameter_requires_grad
+import freezeModel
 # from freezeModel import set_parameter_requires_grad 
 
 
@@ -10,7 +10,7 @@ class ViolenceModel(nn.Module):
       self.seqLen = seqLen
       self.alexnet = models.alexnet(pretrained=True)
       feature_extract = True
-      set_parameter_requires_grad(self.alexnet, feature_extract)
+      freezeModel.set_parameter_requires_grad(self.alexnet, feature_extract)
       
       self.convNet = nn.Sequential(*list(self.alexnet.features.children()))
       self.linear = nn.Linear(256*6*6*seqLen,2)
