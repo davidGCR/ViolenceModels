@@ -1,5 +1,6 @@
 import torch.nn as nn
 from torchvision import models
+import freezeModel.set_parameter_requires_grad
 # from freezeModel import set_parameter_requires_grad 
 
 
