@@ -1,11 +1,7 @@
 import torch.nn as nn
 from torchvision import models
-# from freezeModel import set_parameter_requires_grad 
+from freezeModel import set_parameter_requires_grad 
 
-def set_parameter_requires_grad(model, feature_extracting):
-    if feature_extracting:
-        for param in model.parameters():
-            param.requires_grad = False
 
 class ViolenceModel(nn.Module):
   def __init__(self, seqLen):
