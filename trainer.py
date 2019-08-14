@@ -22,7 +22,7 @@ class Trainer:
         self.dataloaders = dataloaders
         self.optimizer = optimizer
         self.criterion = criterion
-        self.tb = TensorBoardColab()
+        # self.tb = TensorBoardColab()
         self.device = device
         self.num_epochs = num_epochs
 
@@ -72,8 +72,8 @@ class Trainer:
         epoch_acc = running_corrects.double() / len(self.dataloaders["train"].dataset)
 
         print("{} Loss: {:.4f} Acc: {:.4f}".format('train', epoch_loss, epoch_acc))
-        self.tb.save_value("trainLoss", "train_loss", epoch, epoch_loss)
-        self.tb.save_value("trainAcc", "train_acc", epoch, epoch_acc)
+        # self.tb.save_value("trainLoss", "train_loss", epoch, epoch_loss)
+        # self.tb.save_value("trainAcc", "train_acc", epoch, epoch_acc)
         return epoch_acc, epoch_loss
 
     def test_epoch(self, epoch):
@@ -101,8 +101,8 @@ class Trainer:
         epoch_loss = running_loss / len(self.dataloaders["val"].dataset)
         epoch_acc = running_corrects.double() / len(self.dataloaders["val"].dataset)
 
-        print("{} Loss: {:.4f} Acc: {:.4f}".format("s", epoch_loss, epoch_acc))
-        self.tb.save_value("testLoss", "test_loss", epoch, epoch_loss)
-        self.tb.save_value("testAcc", "test_acc", epoch, epoch_acc)
+        print("{} Loss: {:.4f} Acc: {:.4f}".format("test", epoch_loss, epoch_acc))
+        # self.tb.save_value("testLoss", "test_loss", epoch, epoch_loss)
+        # self.tb.save_value("testAcc", "test_acc", epoch, epoch_acc)
 
         return epoch_loss, epoch_acc
