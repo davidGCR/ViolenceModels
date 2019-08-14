@@ -74,7 +74,7 @@ class Trainer:
         print("{} Loss: {:.4f} Acc: {:.4f}".format('train', epoch_loss, epoch_acc))
         # self.tb.save_value("trainLoss", "train_loss", epoch, epoch_loss)
         # self.tb.save_value("trainAcc", "train_acc", epoch, epoch_acc)
-        return epoch_acc, epoch_loss
+        return epoch_loss, epoch_acc
 
     def test_epoch(self, epoch):
         running_loss = 0.0
