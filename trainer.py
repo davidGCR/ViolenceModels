@@ -6,7 +6,7 @@ import copy
 
 
 class Trainer:
-    def __init__(self, model, dataloaders, criterion, optimizer):
+    def __init__(self, model, dataloaders, criterion, optimizer,device):
         self.model = model
         # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet, inception]
         self.model_name = "alexnet"
@@ -23,22 +23,21 @@ class Trainer:
         self.optimizer = optimizer
         self.criterion = criterion
         self.tb = TensorBoardColab()
+        self.devive = device
 
     def train_epoch(self, epoch):
-        epoch_acc_train = 0.0
-        epoch_loss_train = 0.0
-        epoch_acc_test = 0.0
-        epoch_loss_test = 0.0
+        print('Epoch {}/{}'.format(epoch, num_epochs - 1))
+        print('-' * 10)
 
         self.model.train()  # Set model to training mode
-
+        is_inception = False
         running_loss = 0.0
         running_corrects = 0
         # Iterate over data.
-        for inputs, labels in dataloaders["train"]:
+        for inputs, labels in self.dataloaders["train"]:
             inputs = inputs.permute(1, 0, 2, 3, 4)
-            inputs = inputs.to(device)
-            labels = labels.to(device)
+            inputs = inputs.to(self.device)
+            labels = labels.to(self.device)
             # zero the parameter gradients
             self.optimizer.zero_grad()
             # forward
@@ -68,10 +67,10 @@ class Trainer:
             running_loss += loss.item() * inputs.size(0)
             running_corrects += torch.sum(preds == labels.data)
 
-            epoch_loss = running_loss / len(dataloaders["train"].dataset)
-            epoch_acc = running_corrects.double() / len(dataloaders["train"].dataset)
+            epoch_loss = running_loss / len(self.dataloaders["train"].dataset)
+            epoch_acc = running_corrects.double() / len(self.dataloaders["train"].dataset)
 
-            print("{} Loss: {:.4f} Acc: {:.4f}".format(phase, epoch_loss, epoch_acc))
+            print("{} Loss: {:.4f} Acc: {:.4f}".format('train', epoch_loss, epoch_acc))
             self.tb.save_value("trainLoss", "train_loss", epoch, epoch_loss)
             self.tb.save_value("trainAcc", "train_acc", epoch, epoch_acc)
         return epoch_acc, epoch_loss
@@ -80,10 +79,10 @@ class Trainer:
         running_loss = 0.0
         running_corrects = 0
         # Iterate over data.
-        for inputs, labels in dataloaders["test"]:
+        for inputs, labels in self.dataloaders["test"]:
             inputs = inputs.permute(1, 0, 2, 3, 4)
-            inputs = inputs.to(device)
-            labels = labels.to(device)
+            inputs = inputs.to(self.device)
+            labels = labels.to(self.device)
             # zero the parameter gradients
             self.optimizer.zero_grad()
             # forward
@@ -98,8 +97,8 @@ class Trainer:
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
 
-                epoch_loss = running_loss / len(dataloaders["test"].dataset)
-                epoch_acc = running_corrects.double() / len(dataloaders["test"].dataset)
+                epoch_loss = running_loss / len(self.dataloaders["test"].dataset)
+                epoch_acc = running_corrects.double() / len(self.dataloaders["test"].dataset)
 
             print("{} Loss: {:.4f} Acc: {:.4f}".format("test", epoch_loss, epoch_acc))
             self.tb.save_value("testLoss", "test_loss", epoch, epoch_loss)
