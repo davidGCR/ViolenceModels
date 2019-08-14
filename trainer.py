@@ -80,7 +80,7 @@ class Trainer:
         running_loss = 0.0
         running_corrects = 0
         # Iterate over data.
-        for inputs, labels in self.dataloaders["test"]:
+        for inputs, labels in self.dataloaders["val"]:
             inputs = inputs.permute(1, 0, 2, 3, 4)
             inputs = inputs.to(self.device)
             labels = labels.to(self.device)
@@ -98,10 +98,10 @@ class Trainer:
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
 
-        epoch_loss = running_loss / len(self.dataloaders["test"].dataset)
-        epoch_acc = running_corrects.double() / len(self.dataloaders["test"].dataset)
+        epoch_loss = running_loss / len(self.dataloaders["val"].dataset)
+        epoch_acc = running_corrects.double() / len(self.dataloaders["val"].dataset)
 
-        print("{} Loss: {:.4f} Acc: {:.4f}".format("test", epoch_loss, epoch_acc))
+        print("{} Loss: {:.4f} Acc: {:.4f}".format("s", epoch_loss, epoch_acc))
         self.tb.save_value("testLoss", "test_loss", epoch, epoch_loss)
         self.tb.save_value("testAcc", "test_acc", epoch, epoch_acc)
 
