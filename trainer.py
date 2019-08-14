@@ -6,7 +6,7 @@ import copy
 
 
 class Trainer:
-    def __init__(self, model, dataloaders, criterion, optimizer,device):
+    def __init__(self, model, dataloaders, criterion, optimizer,device, num_epochs):
         self.model = model
         # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet, inception]
         self.model_name = "alexnet"
@@ -23,10 +23,11 @@ class Trainer:
         self.optimizer = optimizer
         self.criterion = criterion
         self.tb = TensorBoardColab()
-        self.devive = device
+        self.device = device
+        self.num_epochs = num_epochs
 
     def train_epoch(self, epoch):
-        print('Epoch {}/{}'.format(epoch, num_epochs - 1))
+        print('Epoch {}/{}'.format(epoch, self.num_epochs - 1))
         print('-' * 10)
 
         self.model.train()  # Set model to training mode
