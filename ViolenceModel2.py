@@ -1,6 +1,7 @@
 import torch.nn as nn
 from torchvision import models
 from util import *
+import torch
 
 class ViolenceModel2(nn.Module):
   def __init__(self, seqLen):
