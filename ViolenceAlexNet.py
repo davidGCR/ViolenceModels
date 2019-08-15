@@ -1,6 +1,7 @@
 import torch.nn as nn
 from torchvision import models
 from util import * 
+import torch
 
 
 class ViolenceModel(nn.Module):
