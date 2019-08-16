@@ -56,7 +56,7 @@ class ViolenceDatasetVideos(Dataset):
         label = self.labels[idx]
         inpSeq = []
         ################################ From videos ################################
-        if self.seqLen == 0 and self.ptime != 0.0:
+        if self.seqLen == 0 and self.interval_duration != 0.0:
             # video_path = '/content/drive/My Drive/VIOLENCE DATASETS/HockeyFightsVideos/Fights/fi2_xvid.avi'
             cap = cv2.VideoCapture(vid_name)
             # start_time_ms = time.time()
@@ -94,7 +94,7 @@ class ViolenceDatasetVideos(Dataset):
                 inpSeq.append(getDynamicImage(frames))  ##add dynamic image
 
         ################################ From frames ################################
-        elif self.seqLen != 0 and self.ptime == 0.0:
+        elif self.seqLen != 0 and self.interval_duration == 0.0:
             frames_list = os.listdir(vid_name)
             frames_list.sort(key=lambda f: int("".join(filter(str.isdigit, f))))
             total_frames = len(frames_list)
