@@ -3,9 +3,9 @@ from torchvision import models
 from util import *
 import torch
 
-class ViolenceModel2(nn.Module):
+class ViolenceModelAlexNetV2(nn.Module): ##ViolenceModel2
   def __init__(self, seqLen):
-      super(ViolenceModel2, self).__init__()
+      super(ViolenceModelAlexNetV2, self).__init__()
       self.seqLen = seqLen
       self.alexnet = models.alexnet(pretrained=True)
       

@@ -10,7 +10,7 @@ from dinamycImage import *
 
 class ViolenceDatasetVideos(Dataset):
   
-  def __init__(self, dataset, labels, spatial_transform, seqLen=0,ptime=0.0):
+  def __init__(self, dataset, labels, spatial_transform, seqLen=0,interval_duration=0.0,difference = 3):
     """
     Args:
         dataset (list): Paths to the videos.
@@ -24,7 +24,8 @@ class ViolenceDatasetVideos(Dataset):
     self.images = dataset
     self.labels = labels
     self.seqLen = seqLen
-    self.ptime = ptime
+    self.interval_duration = interval_duration
+    self.diference_max = difference
 
   def __len__(self):
     return len(self.images)
@@ -33,30 +34,46 @@ class ViolenceDatasetVideos(Dataset):
     vid_name = self.images[idx]
     label = self.labels[idx]
     inpSeq = []
-
-    if self.seqLen == 0 and self.ptime != 0.0:  ##From videos
-      video_length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-      fps = cap.get(cv2.CAP_PROP_FPS)
-      # duration = video_length / fps
-      
+    ################################ From videos ################################
+    if self.seqLen == 0 and self.ptime != 0.0:  
+      # video_path = '/content/drive/My Drive/VIOLENCE DATASETS/HockeyFightsVideos/Fights/fi2_xvid.avi'
       cap = cv2.VideoCapture(vid_name)
-      start_time = time.time()
-      frames = []
+      # start_time_ms = time.time()
+
+      video_length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+      # fps = cap.get(cv2.CAP_PROP_FPS)
+      # duration = video_length/fps
+      # print('video duration: ',str(duration%60),',  total frames on video: ',video_length)
+
+      count = 0
       success = True
-      fcount = 0
+      frames = []
+      # numberDi = int(duration/self.interval_duration) #Number of Dynamic images estimated
+      numberFramesInterval = 0
 
-      # while(time.time() - start_time < self.ptime and ):
-      #   success, frame = cap.read()
-      #   if not success:
-      #       break
-      #   fcount = fcount + 1
-      #   # print(fcount)
-      #   img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-      #   # plt.imshow(img)
-      #   # plt.show()
-      #   frames.append(Image.fromarray(frame))
-
-    elif self.seqLen != 0 and self.ptime == 0.0: ##From frames folder
+      # while success and vidcap.get(cv2.CV_CAP_PROP_POS_MSEC)/1000 < start_time_ms:
+      #     success, image = vidcap.read()
+      capture_duration = self.interval_duration
+      while(count<video_length-1):
+        current_time = cap.get(cv2.CAP_PROP_POS_MSEC)/1000
+        if current_time <= capture_duration:
+          success, image = cap.read()
+          if success:
+            frames.append(image)
+        else: 
+          numberFramesInterval = len(frames) ##number of frames to sumarize
+          inpSeq.append(getDynamicImage(frames)) ##add dynamic image 
+          frames = []
+          frames.append(image)
+          capture_duration = current_time + self.interval_duration
+        count += 1
+      ## the last chunk
+      if(numberFramesInterval - len(frames) < self.diference_max):
+        inpSeq.append(getDynamicImage(frames))##add dynamic image 
+        
+      
+    ################################ From frames ################################
+    elif self.seqLen != 0 and self.ptime == 0.0: 
       frames_list = os.listdir(vid_name)
       frames_list.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
       total_frames = len(frames_list)
@@ -90,21 +107,13 @@ def createDataset(path_violence,path_noviolence):
 
   for target in list_violence:
       d = os.path.join(path_violence, target)
-  #     print(d)
-  #     if not os.path.isdir(d):
-  #         continue
       imagesF.append(d)
-
-
   imagesNoF = []
   list_no_violence = os.listdir(path_noviolence)
   list_no_violence.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
 
   for target in list_no_violence:
       d = os.path.join(path_noviolence, target)
-#       print(d)
-  #     if not os.path.isdir(d):
-  #         continue
       imagesNoF.append(d)
 
   Dataset = imagesF + imagesNoF
