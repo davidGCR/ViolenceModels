@@ -83,6 +83,7 @@ class ViolenceDatasetVideos(Dataset):
                     if success:
                         frames.append(image)
                 else:
+                    print('dimimimimimimimimim: ')
                     numberFramesInterval = len(frames)  ##number of frames to sumarize
                     inpSeq.append(getDynamicImage(frames))  ##add dynamic image
                     frames = []
