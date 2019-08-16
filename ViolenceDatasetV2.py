@@ -78,22 +78,24 @@ class ViolenceDatasetVideos(Dataset):
             capture_duration = self.interval_duration
             while count < video_length - 1:
                 current_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000
-                print('current_time ',current_time, 'capture_duration ',capture_duration)
+                # print('current_time ',current_time, 'capture_duration ',capture_duration)
                 if current_time <= capture_duration:
                     success, image = cap.read()
                     if success:
                         frames.append(image)
                 else:
-                    print('dimimimimimimimimim: ')
+                    # print('dimimimimimimimimim: ')
                     numberFramesInterval = len(frames)  ##number of frames to sumarize
-                    inpSeq.append(getDynamicImage(frames))  ##add dynamic image
+                    img = getDynamicImage(frames)
+                    inpSeq.append(self.spatial_transform(img.convert("RGB")))
                     frames = []
                     frames.append(image)
                     capture_duration = current_time + self.interval_duration
                 count += 1
             ## the last chunk
             if numberFramesInterval - len(frames) < self.diference_max:
-                inpSeq.append(getDynamicImage(frames))  ##add dynamic image
+                img = getDynamicImage(frames)
+                inpSeq.append(self.spatial_transform(img.convert("RGB")))  ##add dynamic image
 
         ################################ From frames ################################
         elif self.seqLen != 0 and self.interval_duration == 0.0:
