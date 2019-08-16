@@ -9,8 +9,6 @@ class ViolenceModelAlexNetV2(nn.Module): ##ViolenceModel2
       self.seqLen = seqLen
       self.alexnet = models.alexnet(pretrained=True)
       
-      
-      
       self.convNet = nn.Sequential(*list(self.alexnet.features.children()))
       
       self.avgpool = nn.AdaptiveAvgPool2d((6, 6))
