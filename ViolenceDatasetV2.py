@@ -64,7 +64,7 @@ class ViolenceDatasetVideos(Dataset):
             video_length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             # fps = cap.get(cv2.CAP_PROP_FPS)
             # duration = video_length / fps
-            # print('video duration: ',str(duration%60),',  total frames on video: ',video_length)
+            print('video durationnnnnnnnnnnnnnnnnnn: ')
 
             count = 0
             success = True
@@ -95,6 +95,7 @@ class ViolenceDatasetVideos(Dataset):
 
         ################################ From frames ################################
         elif self.seqLen != 0 and self.interval_duration == 0.0:
+            print('frameeeeeeeeeeeeeeees: ')
             frames_list = os.listdir(vid_name)
             frames_list.sort(key=lambda f: int("".join(filter(str.isdigit, f))))
             total_frames = len(frames_list)
