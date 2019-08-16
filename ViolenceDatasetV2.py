@@ -64,7 +64,7 @@ class ViolenceDatasetVideos(Dataset):
             video_length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             # fps = cap.get(cv2.CAP_PROP_FPS)
             # duration = video_length / fps
-            print('video durationnnnnnnnnnnnnnnnnnn: ')
+            # print('video durationnnnnnnnnnnnnnnnnnn: ')
 
             count = 0
             success = True
