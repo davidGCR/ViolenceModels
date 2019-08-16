@@ -78,6 +78,7 @@ class ViolenceDatasetVideos(Dataset):
             capture_duration = self.interval_duration
             while count < video_length - 1:
                 current_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000
+                print('current_time ',current_time, 'capture_duration ',capture_duration)
                 if current_time <= capture_duration:
                     success, image = cap.read()
                     if success:
