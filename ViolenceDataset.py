@@ -45,16 +45,16 @@ class ViolenceDatasetVideos(Dataset):
       success = True
       fcount = 0
 
-      while(time.time() - start_time < self.ptime and ):
-        success, frame = cap.read()
-        if not success:
-            break
-        fcount = fcount + 1
-        # print(fcount)
-        img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        # plt.imshow(img)
-        # plt.show()
-        frames.append(Image.fromarray(frame))
+      # while(time.time() - start_time < self.ptime and ):
+      #   success, frame = cap.read()
+      #   if not success:
+      #       break
+      #   fcount = fcount + 1
+      #   # print(fcount)
+      #   img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+      #   # plt.imshow(img)
+      #   # plt.show()
+      #   frames.append(Image.fromarray(frame))
 
     elif self.seqLen != 0 and self.ptime == 0.0: ##From frames folder
       frames_list = os.listdir(vid_name)
