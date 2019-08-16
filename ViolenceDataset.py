@@ -5,10 +5,12 @@ import os
 import cv2
 import torch
 import glob
+import time
+from dinamycImage import *
 
 class ViolenceDatasetVideos(Dataset):
   
-  def __init__(self, dataset, labels, spatial_transform, seqLen):
+  def __init__(self, dataset, labels, spatial_transform, seqLen=0,ptime=0.0):
     """
     Args:
         dataset (list): Paths to the videos.
@@ -22,6 +24,7 @@ class ViolenceDatasetVideos(Dataset):
     self.images = dataset
     self.labels = labels
     self.seqLen = seqLen
+    self.ptime = ptime
 
   def __len__(self):
     return len(self.images)
@@ -29,46 +32,55 @@ class ViolenceDatasetVideos(Dataset):
   def __getitem__(self, idx):
     vid_name = self.images[idx]
     label = self.labels[idx]
-    
-    frames_list = os.listdir(vid_name)
-    frames_list.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
-    total_frames = len(frames_list)
-    
-    sequences = [frames_list[x:x+self.seqLen] for x in range(0, total_frames, self.seqLen)]
-    
     inpSeq = []
-    
-    for index, seq in enumerate(sequences):
-      if len(seq)==self.seqLen:
-        frames = []
-        for frame in seq:
-          img_dir = str(vid_name)+'/'+ frame
-          
-#           img = cv2.imread(img_dir,cv2.IMREAD_COLOR)
-#           img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-          img = Image.open(img_dir).convert("RGB")
-          img = np.array(img) 
-          frames.append(img)
 
-        frames = np.stack(frames, axis=0)
-        fw = np.zeros(self.seqLen)  
-        for i in range(self.seqLen): #frame by frame
-          fw[i] = np.sum( np.divide((2*np.arange(i+1,self.seqLen+1)-self.seqLen-1) , np.arange(i+1,self.seqLen+1))  )
+    if self.seqLen == 0 and self.ptime != 0.0:  ##From videos
+      video_length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+      fps = cap.get(cv2.CAP_PROP_FPS)
+      # duration = video_length / fps
+      
+      cap = cv2.VideoCapture(vid_name)
+      start_time = time.time()
+      frames = []
+      success = True
+      fcount = 0
 
-        fwr = fw.reshape(self.seqLen,1,1,1)
-        sm = frames*fwr
-        sm = sm.sum(0)
-        sm = sm - np.min(sm) ;
-        sm = 255 * sm /np.max(sm) ;
-        img = sm.astype(np.uint8)
-        ##to PIL image
-        img = Image.fromarray(np.uint8(img))
-        
-        inpSeq.append(self.spatial_transform(img.convert('RGB')))
+      while(time.time() - start_time < self.ptime and ):
+        success, frame = cap.read()
+        if not success:
+            break
+        fcount = fcount + 1
+        # print(fcount)
+        img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # plt.imshow(img)
+        # plt.show()
+        frames.append(Image.fromarray(frame))
+
+    elif self.seqLen != 0 and self.ptime == 0.0: ##From frames folder
+      frames_list = os.listdir(vid_name)
+      frames_list.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
+      total_frames = len(frames_list)
+      
+      sequences = [frames_list[x:x+self.seqLen] for x in range(0, total_frames, self.seqLen)]
+      
+      # inpSeq = []
+      
+      for index, seq in enumerate(sequences):
+        if len(seq)==self.seqLen:
+          frames = []
+          for frame in seq:
+            img_dir = str(vid_name)+'/'+ frame
+            
+            img = Image.open(img_dir).convert("RGB")
+            img = np.array(img) 
+            frames.append(img)
+          img = getDynamicImage(frames)
+          inpSeq.append(self.spatial_transform(img.convert('RGB')))
     
     inpSeq = torch.stack(inpSeq, 0)
    
-    return inpSeq,label
+    return inpSeq, label
+
 
 def createDataset(path_violence,path_noviolence):
   imagesF = []

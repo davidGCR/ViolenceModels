@@ -21,9 +21,9 @@ import sys
 # insert at 1, 0 is the script path (or '' in REPL)
 sys.path.insert(1, '/media/david/datos/PAPERS-SOURCE_CODE/MyCode')
 from ViolenceAlexNet import *
-from ViolenceDataset import *
-from trainer import *
-from kfolds import *
+from ViolenceDataset import createDataset, ViolenceDatasetVideos
+from trainer import Trainer
+from kfolds import k_folds
 from operator import itemgetter
 
 ##Create dataset
