@@ -1,5 +1,5 @@
 import numpy as np
-import Image from PIL
+from PIL import Image
 
 def getDynamicImage(frames):
     frames = np.stack(frames, axis=0)
