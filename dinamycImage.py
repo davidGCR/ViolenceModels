@@ -1,13 +1,18 @@
 import numpy as np
 from PIL import Image
 
-def getDynamicImage(frames):
-    frames = np.stack(frames, axis=0)
-    fw = np.zeros(self.seqLen)  
-    for i in range(self.seqLen): #frame by frame
-      fw[i] = np.sum( np.divide((2*np.arange(i+1,self.seqLen+1)-self.seqLen-1) , np.arange(i+1,self.seqLen+1))  )
+# class DinamycImage():
+#     def __init__(self,):
 
-    fwr = fw.reshape(self.seqLen,1,1,1)
+def getDynamicImage(frames):
+    seqLen = len(frames)
+    frames = np.stack(frames, axis=0)
+
+    fw = np.zeros(seqLen)  
+    for i in range(seqLen): #frame by frame
+      fw[i] = np.sum( np.divide((2*np.arange(i+1,seqLen+1)-seqLen-1) , np.arange(i+1,seqLen+1))  )
+
+    fwr = fw.reshape(seqLen,1,1,1)
     sm = frames*fwr
     sm = sm.sum(0)
     sm = sm - np.min(sm) 
