@@ -53,6 +53,7 @@ class ViolenceDatasetVideos(Dataset):
     def __getitem__(self, idx):
         
         vid_name = self.images[idx]
+        print(vid_name)
         label = self.labels[idx]
         inpSeq = []
         ################################ From videos ################################
