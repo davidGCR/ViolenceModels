@@ -125,6 +125,7 @@ class ViolenceDatasetVideos(Dataset):
                     inpSeq.append(self.spatial_transform(img.convert("RGB")))
 
         inpSeq = torch.stack(inpSeq, 0)
+        print('inpSeq size: ', inpSeq.size())
 
         return inpSeq, label
 
