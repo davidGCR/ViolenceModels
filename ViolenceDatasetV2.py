@@ -20,7 +20,8 @@ class ViolenceDatasetVideos(Dataset):
         seqLen=0,
         interval_duration=0.0,
         difference=3,
-        maxDuration = 0
+        maxDuration=0,
+        nDynamicImages=0
     ):
         """
     Args:
@@ -36,7 +37,7 @@ class ViolenceDatasetVideos(Dataset):
         self.seqLen = seqLen
         self.interval_duration = interval_duration
         self.diference_max = difference
-        self.nDynamicImages = 0
+        self.nDynamicImages = nDynamicImages
         self.maxDuration = maxDuration
         self.source = source
 
@@ -59,7 +60,7 @@ class ViolenceDatasetVideos(Dataset):
         vid_name = self.images[idx]
         print(vid_name)
         label = self.labels[idx]
-        inpSeq = []
+        dinamycImages = []
         ################################ From videos ################################
         if self.source == 'video':
             cap = cv2.VideoCapture(vid_name)
@@ -94,7 +95,7 @@ class ViolenceDatasetVideos(Dataset):
                     numberFramesInterval = len(frames)  ##number of frames to sumarize
                     img = getDynamicImage(frames)
 
-                    inpSeq.append(self.spatial_transform(img.convert("RGB")))
+                    dinamycImages.append(self.spatial_transform(img.convert("RGB")))
                     frames = []
                     frames.append(image)
                     capture_duration = current_time + self.interval_duration
@@ -103,8 +104,11 @@ class ViolenceDatasetVideos(Dataset):
             if numberFramesInterval - len(frames) < self.diference_max: 
                 print('ading the last ----------: ')
                 img = getDynamicImage(frames)
-                inpSeq.append(self.spatial_transform(img.convert("RGB")))  ##add dynamic image
+                dinamycImages.append(self.spatial_transform(img.convert("RGB")))  ##add dynamic image
             
+            if len(dinamycImages) > self.nDynamicImages:
+                n = len(dinamycImages) - self.nDynamicImages
+                dinamycImages = del dinamycImages[-n:]
 
         ################################ From frames ################################
         elif self.source == 'frames':
@@ -131,12 +135,12 @@ class ViolenceDatasetVideos(Dataset):
                         img = np.array(img)
                         frames.append(img)
                     img = getDynamicImage(frames)
-                    inpSeq.append(self.spatial_transform(img.convert("RGB")))
+                    dinamycImages.append(self.spatial_transform(img.convert("RGB")))
 
-        inpSeq = torch.stack(inpSeq, 0)
-        print('inpSeq size: ', inpSeq.size())
+        dinamycImages = torch.stack(dinamycImages, 0)
+        print('dinamycImages size: ', dinamycImages.size())
 
-        return inpSeq, label
+        return dinamycImages, label
 
         #####################################################################################################################################
 
