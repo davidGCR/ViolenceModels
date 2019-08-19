@@ -15,18 +15,20 @@ class ViolenceDatasetVideos(Dataset):
         dataset,
         labels,
         spatial_transform,
+        type='frames',
+        numberSubvideos = 2,
         seqLen=0,
         interval_duration=0.0,
         difference=3,
+        maxDuration = 0
     ):
         """
     Args:
         dataset (list): Paths to the videos.
         labels (list): labels froma data
         seqLen (int): Number of frames in each segment
-        
-        spatial_transform (callable, optional): Optional transform to be applied
-            on a sample.
+        type (string)= Extrct from frames or from video : 'frames'/'video' 
+        spatial_transform (callable, optional): Optional transform to be applied on a sample.
     """
         self.spatial_transform = spatial_transform
         self.images = dataset
@@ -35,6 +37,7 @@ class ViolenceDatasetVideos(Dataset):
         self.interval_duration = interval_duration
         self.diference_max = difference
         self.nDynamicImages = 0
+        self.maxDuration = maxDuration
 
     def getNoDynamicImagesEstimated(self, idx):
         vid_name = self.images[idx]
@@ -57,8 +60,7 @@ class ViolenceDatasetVideos(Dataset):
         label = self.labels[idx]
         inpSeq = []
         ################################ From videos ################################
-        if self.seqLen == 0 and self.interval_duration != 0.0:
-            # video_path = '/content/drive/My Drive/VIOLENCE DATASETS/HockeyFightsVideos/Fights/fi2_xvid.avi'
+        if self.type = 'video':
             cap = cv2.VideoCapture(vid_name)
             # start_time_ms = time.time()
 
@@ -80,6 +82,8 @@ class ViolenceDatasetVideos(Dataset):
             while count < video_length - 1:
                 current_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000
                 # print('current_time ',current_time, 'capture_duration ',capture_duration)
+                if current_time > self.maxDuration:
+                    break
                 if current_time <= capture_duration:
                     success, image = cap.read()
                     if success:
@@ -88,6 +92,7 @@ class ViolenceDatasetVideos(Dataset):
                     # print('dimimimimimimimimim: ')
                     numberFramesInterval = len(frames)  ##number of frames to sumarize
                     img = getDynamicImage(frames)
+
                     inpSeq.append(self.spatial_transform(img.convert("RGB")))
                     frames = []
                     frames.append(image)
@@ -98,17 +103,19 @@ class ViolenceDatasetVideos(Dataset):
                 print('ading the last ----------: ')
                 img = getDynamicImage(frames)
                 inpSeq.append(self.spatial_transform(img.convert("RGB")))  ##add dynamic image
+            
 
         ################################ From frames ################################
-        elif self.seqLen != 0 and self.interval_duration == 0.0:
+        elif self.type == 'frames':
             print('frameeeeeeeeeeeeeeees: ')
             frames_list = os.listdir(vid_name)
             frames_list.sort(key=lambda f: int("".join(filter(str.isdigit, f))))
             total_frames = len(frames_list)
 
+            # self.seqLen = int(total_frames)
+
             sequences = [
-                frames_list[x : x + self.seqLen]
-                for x in range(0, total_frames, self.seqLen)
+                frames_list[x : x + self.seqLen] for x in range(0, total_frames, self.seqLen)
             ]
 
             # inpSeq = []
