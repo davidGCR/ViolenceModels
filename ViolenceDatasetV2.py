@@ -84,8 +84,7 @@ class ViolenceDatasetVideos(Dataset):
             while count < video_length - 1:
                 current_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000
                 # print('current_time ',current_time, 'capture_duration ',capture_duration)
-                if current_time > self.maxDuration:
-                    break
+               
                 if current_time <= capture_duration:
                     success, image = cap.read()
                     if success:
@@ -102,7 +101,7 @@ class ViolenceDatasetVideos(Dataset):
                 count += 1
             ## the last chunk
             if numberFramesInterval - len(frames) < self.diference_max: 
-                print('ading the last ----------: ')
+                # print('ading the last ----------: ')
                 img = getDynamicImage(frames)
                 dinamycImages.append(self.spatial_transform(img.convert("RGB")))  ##add dynamic image
             
@@ -138,7 +137,7 @@ class ViolenceDatasetVideos(Dataset):
                     dinamycImages.append(self.spatial_transform(img.convert("RGB")))
 
         dinamycImages = torch.stack(dinamycImages, 0)
-        print('dinamycImages size: ', dinamycImages.size())
+        # print('dinamycImages size: ', dinamycImages.size())
 
         return dinamycImages, label
 

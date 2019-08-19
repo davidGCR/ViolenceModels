@@ -12,8 +12,7 @@ class Trainer:
         self.model_name = "alexnet"
         # Number of classes in the dataset
         self.num_classes = 2
-        # Batch size for training (change depending on how much memory you have)
-        self.batch_size = 64
+        
         # Flag for feature extracting. When False, we finetune the whole model,
         #   when True we only update the reshaped layer params
         self.feature_extract = True
