@@ -94,7 +94,8 @@ class ViolenceDatasetVideos(Dataset):
                     capture_duration = current_time + self.interval_duration
                 count += 1
             ## the last chunk
-            if numberFramesInterval - len(frames) < self.diference_max:
+            if numberFramesInterval - len(frames) < self.diference_max: \
+                print('ading the last ----------: ')
                 img = getDynamicImage(frames)
                 inpSeq.append(self.spatial_transform(img.convert("RGB")))  ##add dynamic image
 
