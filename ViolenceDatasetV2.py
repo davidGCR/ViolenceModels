@@ -108,7 +108,7 @@ class ViolenceDatasetVideos(Dataset):
             
             if len(dinamycImages) > self.nDynamicImages:
                 n = len(dinamycImages) - self.nDynamicImages
-                dinamycImages = del dinamycImages[-n:]
+                del dinamycImages[-n:]
 
         ################################ From frames ################################
         elif self.source == 'frames':
