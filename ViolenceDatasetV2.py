@@ -60,7 +60,7 @@ class ViolenceDatasetVideos(Dataset):
         label = self.labels[idx]
         inpSeq = []
         ################################ From videos ################################
-        if self.type = 'video':
+        if self.type == 'video':
             cap = cv2.VideoCapture(vid_name)
             # start_time_ms = time.time()
 
