@@ -15,7 +15,7 @@ class ViolenceDatasetVideos(Dataset):
         dataset,
         labels,
         spatial_transform,
-        type='frames',
+        source='frames',
         numberSubvideos = 2,
         seqLen=0,
         interval_duration=0.0,
@@ -38,6 +38,7 @@ class ViolenceDatasetVideos(Dataset):
         self.diference_max = difference
         self.nDynamicImages = 0
         self.maxDuration = maxDuration
+        self.source = source
 
     def getNoDynamicImagesEstimated(self, idx):
         vid_name = self.images[idx]
@@ -60,7 +61,7 @@ class ViolenceDatasetVideos(Dataset):
         label = self.labels[idx]
         inpSeq = []
         ################################ From videos ################################
-        if self.type == 'video':
+        if self.source == 'video':
             cap = cv2.VideoCapture(vid_name)
             # start_time_ms = time.time()
 
@@ -106,7 +107,7 @@ class ViolenceDatasetVideos(Dataset):
             
 
         ################################ From frames ################################
-        elif self.type == 'frames':
+        elif self.source == 'frames':
             print('frameeeeeeeeeeeeeeees: ')
             frames_list = os.listdir(vid_name)
             frames_list.sort(key=lambda f: int("".join(filter(str.isdigit, f))))
