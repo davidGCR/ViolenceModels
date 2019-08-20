@@ -4,7 +4,7 @@ from util import *
 import torch
 
 class ViolenceModelAlexNetV2(nn.Module): ##ViolenceModel2
-  def __init__(self, seqLen):
+  def __init__(self, seqLen, feature_extract= True):
       super(ViolenceModelAlexNetV2, self).__init__()
       self.seqLen = seqLen
       self.alexnet = models.alexnet(pretrained=True)
@@ -20,7 +20,7 @@ class ViolenceModelAlexNetV2(nn.Module): ##ViolenceModel2
           nn.Linear(4096, 4096),
           nn.ReLU(inplace=True),
       )
-      feature_extract = True
+      self.feature_extract = feature_extract
       
       set_parameter_requires_grad(self.alexnet, feature_extract)
       set_parameter_requires_grad(self.avgpool, feature_extract)

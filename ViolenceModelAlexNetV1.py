@@ -5,11 +5,11 @@ import torch
 
 
 class ViolenceModelAlexNetV1(nn.Module): ##ViolenceModel
-  def __init__(self, seqLen):
+  def __init__(self, seqLen, feature_extract= True):
       super(ViolenceModelAlexNetV1, self).__init__()
       self.seqLen = seqLen
       self.alexnet = models.alexnet(pretrained=True)
-      feature_extract = True
+      self.feature_extract = feature_extract
       set_parameter_requires_grad(self.alexnet, feature_extract)
       
       self.convNet = nn.Sequential(*list(self.alexnet.features.children()))
