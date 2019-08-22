@@ -13,8 +13,12 @@ def initialize_model(model_name, num_classes, feature_extract, numDiPerVideos, u
     model_ft = None
     input_size = 0
 
-    if model_ft == "alexnetv1":
+    if model_name == "alexnetv1":
         model_ft = ViolenceModelAlexNetV1(numDiPerVideos, feature_extract=True)
+        set_parameter_requires_grad(model_ft, feature_extract)
+        input_size = 224
+    elif model_name == "alexnetv2":
+        model_ft = ViolenceModelAlexNetV2(numDiPerVideos, feature_extract=True)
         set_parameter_requires_grad(model_ft, feature_extract)
         input_size = 224
 
@@ -69,7 +73,7 @@ def initialize_model(model_name, num_classes, feature_extract, numDiPerVideos, u
         input_size = 299
 
     else:
-        print("Invalid model name, exiting...")
-        exit()
+        print("Invalid model name...")
+        # exit()
 
     return model_ft, input_size
