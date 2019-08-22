@@ -111,7 +111,6 @@ class ViolenceDatasetVideos(Dataset):
 
         ################################ From frames ################################
         elif self.source == 'frames':
-            print('frameeeeeeeeeeeeeeees: ')
             frames_list = os.listdir(vid_name)
             frames_list.sort(key=lambda f: int("".join(filter(str.isdigit, f))))
             total_frames = len(frames_list)
