@@ -15,11 +15,11 @@ def initialize_model(model_name, num_classes, feature_extract, numDiPerVideos, u
 
     if model_name == "alexnetv1":
         model_ft = ViolenceModelAlexNetV1(numDiPerVideos, feature_extract=True)
-        set_parameter_requires_grad(model_ft, feature_extract)
+        # set_parameter_requires_grad(model_ft, feature_extract)
         input_size = 224
     elif model_name == "alexnetv2":
         model_ft = ViolenceModelAlexNetV2(numDiPerVideos, feature_extract=True)
-        set_parameter_requires_grad(model_ft, feature_extract)
+        # set_parameter_requires_grad(model_ft, feature_extract)
         input_size = 224
 
     elif model_name == "resnet":
