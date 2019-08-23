@@ -10,10 +10,10 @@ class ViolenceModelResNet(nn.Module):
 
         self.model_ft = models.resnet18(pretrained=True)
 
-        self.conv1 = nn.Sequential(*list(self.model_ft.conv1.children()))
-        self.bn1 = nn.Sequential(*list(self.model_ft.bn1.children()))
-        self.relu = nn.Sequential(*list(self.model_ft.relu.children()))
-        self.maxpool = nn.Sequential(*list(self.model_ft.maxpool.children()))
+        self.conv1 = self.model_ft.conv1
+        self.bn1 = self.model_ft.bn1
+        self.relu = self.model_ft.relu
+        self.maxpool = self.model_ft.maxpool
         
         self.l1 = nn.Sequential(*list(self.model_ft.layer1.children()))
         self.l2 = nn.Sequential(*list(self.model_ft.layer2.children()))
