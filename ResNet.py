@@ -20,7 +20,7 @@ class ViolenceModelResNet(nn.Module):
         self.l3 = nn.Sequential(*list(self.model_ft.layer3.children()))
         self.l4 = nn.Sequential(*list(self.model_ft.layer4.children()))
 
-        self.avgpool = nn.Sequential(*list(self.model_ft.avgpool.children()))
+        self.avgpool = self.model_ft.avgpool
 
         set_parameter_requires_grad(self.conv1, feature_extract)
         set_parameter_requires_grad(self.bn1, feature_extract)
@@ -39,8 +39,7 @@ class ViolenceModelResNet(nn.Module):
         lista = []
 
         for dimage in range(0, self.seqLen):
-            feature = self.convNet(x[dimage])
-            feature = self.conv1(feature)
+            feature = self.conv1(x[dimage])
             feature = self.bn1(feature)
             feature = self.relu(feature)
             feature = self.maxpool(feature)
