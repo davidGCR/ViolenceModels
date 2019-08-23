@@ -22,15 +22,15 @@ class ViolenceModelResNet(nn.Module):
 
         self.avgpool = nn.Sequential(*list(self.model_ft.avgpool.children()))
 
-        self.set_parameter_requires_grad(self.conv1, feature_extract)
-        self.set_parameter_requires_grad(self.bn1, feature_extract)
-        self.set_parameter_requires_grad(self.relu, feature_extract)
-        self.set_parameter_requires_grad(self.maxpool, feature_extract)
-        self.set_parameter_requires_grad(self.l1, feature_extract)
-        self.set_parameter_requires_grad(self.l2, feature_extract)
-        self.set_parameter_requires_grad(self.l3, feature_extract)
-        self.set_parameter_requires_grad(self.l4, feature_extract)
-        self.set_parameter_requires_grad(self.avgpool, feature_extract)
+        set_parameter_requires_grad(self.conv1, feature_extract)
+        set_parameter_requires_grad(self.bn1, feature_extract)
+        set_parameter_requires_grad(self.relu, feature_extract)
+        set_parameter_requires_grad(self.maxpool, feature_extract)
+        set_parameter_requires_grad(self.l1, feature_extract)
+        set_parameter_requires_grad(self.l2, feature_extract)
+        set_parameter_requires_grad(self.l3, feature_extract)
+        set_parameter_requires_grad(self.l4, feature_extract)
+        set_parameter_requires_grad(self.avgpool, feature_extract)
         
         self.num_ftrs = self.model_ft.fc.in_features
         self.fc = nn.Linear(self.seqLen*self.num_ftrs, 2)
