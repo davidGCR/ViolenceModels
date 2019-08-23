@@ -22,6 +22,8 @@ class ViolenceModelResNet(nn.Module):
 
         self.avgpool = self.model_ft.avgpool
 
+        
+
         set_parameter_requires_grad(self.conv1, feature_extract)
         set_parameter_requires_grad(self.bn1, feature_extract)
         set_parameter_requires_grad(self.relu, feature_extract)
@@ -33,6 +35,7 @@ class ViolenceModelResNet(nn.Module):
         set_parameter_requires_grad(self.avgpool, feature_extract)
         
         self.num_ftrs = self.model_ft.fc.in_features
+        self.model_ft = None
         self.fc = nn.Linear(self.seqLen*self.num_ftrs, 2)
     
     def forward(self, x):
