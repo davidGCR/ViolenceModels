@@ -5,7 +5,7 @@ import torch
 
 
 class ViolenceModelAlexNetV1(nn.Module): ##ViolenceModel
-  def __init__(self, seqLen, feature_extract= True):
+  def __init__(self, seqLen, feature_extract):
       super(ViolenceModelAlexNetV1, self).__init__()
       self.seqLen = seqLen
       self.alexnet = models.alexnet(pretrained=True)
