@@ -6,6 +6,7 @@ import torchvision
 from torchvision import datasets, models, transforms
 from util import set_parameter_requires_grad
 from AlexNet import ViolenceModelAlexNetV1, ViolenceModelAlexNetV2
+from ResNet import *
 
 def initialize_model(model_name, num_classes, feature_extract, numDiPerVideos, use_pretrained=True):
     # Initialize these variables which will be set in this if statement. Each of these
@@ -25,10 +26,10 @@ def initialize_model(model_name, num_classes, feature_extract, numDiPerVideos, u
     elif model_name == "resnet":
         """ Resnet18
         """
-        model_ft = models.resnet18(pretrained=use_pretrained)
-        set_parameter_requires_grad(model_ft, feature_extract)
-        num_ftrs = model_ft.fc.in_features
-        model_ft.fc = nn.Linear(num_ftrs, num_classes)
+        model_ft = ViolenceModelResNet(numDiPerVideos, feature_extract=True)
+        # set_parameter_requires_grad(model_ft, feature_extract)
+        # num_ftrs = model_ft.fc.in_features
+        # model_ft.fc = nn.Linear(num_ftrs, num_classes)
         input_size = 224
 
     elif model_name == "vgg":
