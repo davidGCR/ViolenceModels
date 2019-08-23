@@ -51,9 +51,9 @@ class ViolenceModelResNet(nn.Module):
             feature = self.l3(feature)
             feature = self.l4(feature)
 
-            feature = self.avgpool(feature)
-            feature = torch.flatten(feature, 1)
-            feature = self.fc(feature)
+            # feature = self.avgpool(feature)
+            # feature = torch.flatten(feature, 1)
+            # feature = self.fc(feature)
             # feature = feature.view(feature.size(0), self.num_ftrs)
             # lista.append(feature)
             print('--->feature fc output size: ',feature.size())
