@@ -16,7 +16,6 @@ class ViolenceDatasetVideos(Dataset):
         labels,
         spatial_transform,
         source='frames',
-        seqLen=0,
         interval_duration=0.0,
         difference=3,
         maxDuration=0,
@@ -33,7 +32,6 @@ class ViolenceDatasetVideos(Dataset):
         self.spatial_transform = spatial_transform
         self.images = dataset
         self.labels = labels
-        self.seqLen = seqLen
         self.interval_duration = interval_duration
         self.diference_max = difference
         self.nDynamicImages = nDynamicImages
