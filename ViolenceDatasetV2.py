@@ -19,7 +19,8 @@ class ViolenceDatasetVideos(Dataset):
         interval_duration=0.0,
         difference=3,
         maxDuration=0,
-        nDynamicImages=0
+        nDynamicImages=0,
+        debugg_mode = False
     ):
         """
     Args:
@@ -37,6 +38,7 @@ class ViolenceDatasetVideos(Dataset):
         self.nDynamicImages = nDynamicImages
         self.maxDuration = maxDuration
         self.source = source
+        self.debugg_mode = debugg_mode
 
     def getNoDynamicImagesEstimated(self, idx):
         vid_name = self.images[idx]
@@ -117,10 +119,9 @@ class ViolenceDatasetVideos(Dataset):
             sequences = [
                 frames_list[x : x + seqLen] for x in range(0, total_frames, seqLen)
             ]
-            
-            print('seqLen: ',seqLen)
-            print('n sequences: ',len(sequences))
-            # inpSeq = []
+            if self.debugg_mode:
+                print('seqLen: ',seqLen)
+                print('n sequences: ',len(sequences))
 
             for index, seq in enumerate(sequences):
                 if len(seq) == seqLen:
@@ -136,10 +137,11 @@ class ViolenceDatasetVideos(Dataset):
 
                     dinamycImages.append(self.spatial_transform(img.convert("RGB")))
 
-        # print('total DyImags: ', len(dinamycImages))
-        dinamycImages = torch.stack(dinamycImages, 0)
-        # print('dinamycImages size: ', dinamycImages.size())
+        if self.debugg_mode:
+            print('total DyImags: ', len(dinamycImages))
 
+        dinamycImages = torch.stack(dinamycImages, 0)
+        
         return dinamycImages, label
 
         #####################################################################################################################################
