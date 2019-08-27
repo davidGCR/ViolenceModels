@@ -90,8 +90,8 @@ class ViolenceDatasetVideos(Dataset):
                     if success:
                         frames.append(image)
                 else:
-                    # print('dimimimimimimimimim: ')
                     numberFramesInterval = len(frames)  ##number of frames to sumarize
+                    print('to summarize: ', numberFramesInterval)
                     img = getDynamicImage(frames)
 
                     dinamycImages.append(self.spatial_transform(img.convert("RGB")))
