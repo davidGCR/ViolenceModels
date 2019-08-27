@@ -115,7 +115,7 @@ class ViolenceDatasetVideos(Dataset):
             seqLen = int(total_frames/self.nDynamicImages)
 
             sequences = [
-                frames_list[x : x + self.seqLen] for x in range(0, total_frames, self.seqLen)
+                frames_list[x : x + seqLen] for x in range(0, total_frames, seqLen)
             ]
             
             print('seqLen: ',seqLen)
