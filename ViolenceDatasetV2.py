@@ -129,12 +129,12 @@ class ViolenceDatasetVideos(Dataset):
                         img = Image.open(img_dir).convert("RGB")
                         img = np.array(img)
                         frames.append(img)
-                    print('->total frames for Di: ', len(frames))
+                    # print('->total frames for Di: ', len(frames))
                     img = getDynamicImage(frames)
 
                     dinamycImages.append(self.spatial_transform(img.convert("RGB")))
 
-        print('total DyImags: ', len(dinamycImages))
+        # print('total DyImags: ', len(dinamycImages))
         dinamycImages = torch.stack(dinamycImages, 0)
         # print('dinamycImages size: ', dinamycImages.size())
 
