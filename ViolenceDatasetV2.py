@@ -112,16 +112,18 @@ class ViolenceDatasetVideos(Dataset):
             frames_list.sort(key=lambda f: int("".join(filter(str.isdigit, f))))
             total_frames = len(frames_list)
 
-            self.seqLen = int(total_frames/self.nDynamicImages)
+            seqLen = int(total_frames/self.nDynamicImages)
 
             sequences = [
                 frames_list[x : x + self.seqLen] for x in range(0, total_frames, self.seqLen)
             ]
-
+            
+            print('seqLen: ',seqLen)
+            print('n sequences: ',len(sequences))
             # inpSeq = []
 
             for index, seq in enumerate(sequences):
-                if len(seq) == self.seqLen:
+                if len(seq) == seqLen:
                     frames = []
                     for frame in seq:
                         img_dir = str(vid_name) + "/" + frame
