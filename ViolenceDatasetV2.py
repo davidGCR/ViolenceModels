@@ -144,25 +144,5 @@ class ViolenceDatasetVideos(Dataset):
         #####################################################################################################################################
 
 
-def createDataset(path_violence, path_noviolence):
-    imagesF = []
 
-    list_violence = os.listdir(path_violence)
-    list_violence.sort(key=lambda f: int("".join(filter(str.isdigit, f))))
-
-    for target in list_violence:
-        d = os.path.join(path_violence, target)
-        imagesF.append(d)
-    imagesNoF = []
-    list_no_violence = os.listdir(path_noviolence)
-    list_no_violence.sort(key=lambda f: int("".join(filter(str.isdigit, f))))
-
-    for target in list_no_violence:
-        d = os.path.join(path_noviolence, target)
-        imagesNoF.append(d)
-
-    Dataset = imagesF + imagesNoF
-    Labels = list([1] * len(imagesF)) + list([0] * len(imagesNoF))
-    NumFrames = [len(glob.glob1(Dataset[i], "*.jpg")) for i in range(len(Dataset))]
-    return Dataset, Labels, NumFrames
 
