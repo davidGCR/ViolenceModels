@@ -88,7 +88,7 @@ class ViolenceDatasetVideos(Dataset):
                         frames.append(image)
                 else:
                     numberFramesInterval = len(frames)  ##number of frames to sumarize
-                    print('to summarize: ', numberFramesInterval)
+                    # print('to summarize: ', numberFramesInterval)
                     img = getDynamicImage(frames)
 
                     dinamycImages.append(self.spatial_transform(img.convert("RGB")))
@@ -129,7 +129,9 @@ class ViolenceDatasetVideos(Dataset):
                         img = Image.open(img_dir).convert("RGB")
                         img = np.array(img)
                         frames.append(img)
+                    print('->total frames for Di: ', len(frames))
                     img = getDynamicImage(frames)
+
                     dinamycImages.append(self.spatial_transform(img.convert("RGB")))
 
         print('total DyImags: ', len(dinamycImages))
