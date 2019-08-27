@@ -135,6 +135,7 @@ class ViolenceDatasetVideos(Dataset):
                     img = getDynamicImage(frames)
                     dinamycImages.append(self.spatial_transform(img.convert("RGB")))
 
+        print('total DyImags: ', len(dinamycImages))
         dinamycImages = torch.stack(dinamycImages, 0)
         # print('dinamycImages size: ', dinamycImages.size())
 
