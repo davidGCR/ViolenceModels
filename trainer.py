@@ -27,9 +27,6 @@ class Trainer:
         self.scheduler = scheduler
 
     def train_epoch(self, epoch):
-        print('Epoch {}/{}'.format(epoch, self.num_epochs - 1))
-        print('-' * 10)
-
         self.scheduler.step()
         self.model.train()  # Set model to training mode
         is_inception = False

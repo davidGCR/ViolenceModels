@@ -123,7 +123,7 @@ class ViolenceDatasetVideos(Dataset):
                 print('seqLen: ',seqLen)
                 print('n sequences: ',len(sequences))
 
-            for index, seq in enumerate(sequences):
+            for seq in sequences:
                 if len(seq) == seqLen:
                     frames = []
                     for frame in seq:
@@ -132,7 +132,8 @@ class ViolenceDatasetVideos(Dataset):
                         img = Image.open(img_dir).convert("RGB")
                         img = np.array(img)
                         frames.append(img)
-                    # print('->total frames for Di: ', len(frames))
+                    if self.debugg_mode:
+                        print('->total frames for Di: ', len(frames))
                     img = getDynamicImage(frames)
 
                     dinamycImages.append(self.spatial_transform(img.convert("RGB")))
