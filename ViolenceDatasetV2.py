@@ -16,7 +16,6 @@ class ViolenceDatasetVideos(Dataset):
         labels,
         spatial_transform,
         source='frames',
-        numberSubvideos = 2,
         seqLen=0,
         interval_duration=0.0,
         difference=3,
@@ -115,7 +114,7 @@ class ViolenceDatasetVideos(Dataset):
             frames_list.sort(key=lambda f: int("".join(filter(str.isdigit, f))))
             total_frames = len(frames_list)
 
-            # self.seqLen = int(total_frames)
+            self.seqLen = int(total_frames/self.nDynamicImages)
 
             sequences = [
                 frames_list[x : x + self.seqLen] for x in range(0, total_frames, self.seqLen)
