@@ -1,48 +1,91 @@
 import numpy as np
+
+
 def partitions(number, k):
-    '''
+    """
     Distribution of the folds
     Args:
         number: number of patients
         k: folds number
-    '''
-    n_partitions = np.ones(k) * int(number/k)
-    n_partitions[0:(number % k)] += 1
+    """
+    n_partitions = np.ones(k) * int(number / k)
+    n_partitions[0 : (number % k)] += 1
     return n_partitions
 
+
 def get_indices(n_splits, subjects):
-    '''
+    """
     Indices of the set test
     Args:
         n_splits: folds number
         subjects: number of patients
         frames: length of the sequence of each patient
-    '''
+    """
     l = partitions(subjects, n_splits)
-    
+
     # fold_sizes = l * frames
     # indices = np.arange(subjects * frames).astype(int)
     indices = np.arange(subjects).astype(int)
     current = 0
     for fold_size in l:
         start = current
-        stop =  current + fold_size
+        stop = current + fold_size
         current = stop
-        yield(indices[int(start):int(stop)])
+        yield (indices[int(start) : int(stop)])
+
 
 def k_folds(n_splits, subjects):
-    '''
+    """
     Generates folds for cross validation
     Args:
         n_splits: folds number
         subjects: number of patients
         frames: length of the sequence of each patient
-    '''
+    """
     # indices = np.arange(subjects * frames).astype(int)
-    indices = np.arange(subjects ).astype(int)
+    indices = np.arange(subjects).astype(int)
     for test_idx in get_indices(n_splits, subjects):
         train_idx = np.setdiff1d(indices, test_idx)
         yield train_idx, test_idx
+
+
+def getAllPaths(gpath, test_idx):
+    all_paths = []
+    all_labels = []
+    llist = os.listdir(gpath)
+    for subfolder in llist:
+
+        if subfolder != str(test_idx):
+            print(subfolder)
+            test_paths_violence = os.listdir(gpath + "/" + subfolder + "/Violence/")
+            test_paths_noviolence = os.listdir(
+                gpath + "/" + subfolder + "/NonViolence/"
+            )
+            all_paths = all_paths + test_paths_violence + test_paths_noviolence
+            all_labels = (
+                all_labels
+                + list([1] * len(test_paths_violence))
+                + list([0] * len(test_paths_noviolence))
+            )
+    return all_paths, all_labels
+
+
+def k_folds_from_folders(gpath, n_splits):
+    #     folds = np.arange(1,n_splits+1)
+    folds = os.listdir(gpath)
+    for test_folder in folds:
+        test_paths_violence = os.listdir(gpath + test_folder + "/Violence/")
+        test_paths_noviolence = os.listdir(gpath + test_folder + "/NonViolence/")
+        test_videos = test_paths_violence + test_paths_noviolence
+        test_labels = list([1] * len(test_paths_violence)) + list(
+            [0] * len(test_paths_noviolence)
+        )
+
+        train_videos, train_labels = getAllPaths(gpath, test_folder)
+        #         train_idx = np.setdiff1d(indices, test_folder)
+
+        yield train_videos, train_labels, test_videos, test_labels
+
 
 # def __main__():
 #     print('test23 kfolfs...')
@@ -52,16 +95,13 @@ def k_folds(n_splits, subjects):
 #         print(train_idx)
 #         print('test_idx',len(test_idx))
 #         print(test_idx)
-        # dataset_train = NNDataset(indices = train_idx)
-        # dataset_test = NNDataset(indices = test_idx)
-        # train_loader = torch.utils.data.DataLoader(dataset = dataset_train, batch_size = batch_size_train, **kwargs)
-        # test_loader = torch.utils.data.DataLoader(dataset = dataset_test, batch_size = batch_size_test, **kwargs)
-        # for epoch in range(1, num_epochs + 1):
-        #     train(model, optimizer, epoch, device, train_loader, log_interval)
-        #     test(model, device, test_loader)
-
-    
-    
+# dataset_train = NNDataset(indices = train_idx)
+# dataset_test = NNDataset(indices = test_idx)
+# train_loader = torch.utils.data.DataLoader(dataset = dataset_train, batch_size = batch_size_train, **kwargs)
+# test_loader = torch.utils.data.DataLoader(dataset = dataset_test, batch_size = batch_size_test, **kwargs)
+# for epoch in range(1, num_epochs + 1):
+#     train(model, optimizer, epoch, device, train_loader, log_interval)
+#     test(model, device, test_loader)
 
 
 # __main__()

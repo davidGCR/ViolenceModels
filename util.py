@@ -1,6 +1,9 @@
 import pickle
 import os
 import glob
+import cv2
+import numpy as np
+
 
 def createDataset(path_violence, path_noviolence):
     imagesF = []
@@ -43,3 +46,5 @@ def loadList(name):
     # read the data as binary data stream
     hist2 = pickle.load(filehandle)
     return hist2
+
+
