@@ -34,8 +34,8 @@ def set_parameter_requires_grad(model, feature_extracting):
 
 
 
-def saveList(model,curve, numDI, lt):
-  data_file = '/content/drive/My Drive/VIOLENCE DATASETS/HockeyFightsFrames/'+str(model)+'-'+str(numDI)+'-'+str(curve)+'.txt'
+def saveList(path_out,model,curve, numDI, lt):
+  data_file = path_out+'/'+str(model)+'-'+str(numDI)+'-'+str(curve)+'.txt'
   with open(data_file, 'wb') as filehandle:
       # store the data as binary data stream
       pickle.dump(lt, filehandle)
