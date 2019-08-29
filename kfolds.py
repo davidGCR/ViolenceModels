@@ -73,6 +73,8 @@ def getAllPaths(gpath, test_idx):
 def k_folds_from_folders(gpath, n_splits):
     #     folds = np.arange(1,n_splits+1)
     folds = os.listdir(gpath)
+    test_videos = []
+    test_labels = []
     for test_folder in folds:
         test_paths_violence = os.listdir(gpath + test_folder + "/Violence/")
         test_paths_noviolence = os.listdir(gpath + test_folder + "/NonViolence/")
