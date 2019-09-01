@@ -48,4 +48,45 @@ def loadList(name):
     hist2 = pickle.load(filehandle)
     return hist2
 
+#######################################################################################
+################################# Videos to Frames ####################################
+#######################################################################################
 
+def video2Images2(video_path, path_out):
+  vid = cv2.VideoCapture(video_path)
+  index_frame = 1
+  while(True):
+      ret, frame = vid.read()
+      if not ret: 
+          break
+      name = path_out+'/'+'frame' + str("{0:03}".format(index_frame)) + '.jpg'
+      print ('Creating...' + name)
+      cv2.imwrite(name, frame)
+      index_frame += 1 
+
+def videos2ImagesFromKfols(path_videos, path_frames):
+  list_folds = os.listdir(path_videos) ## [1 2 3 4 5]
+  for fold in list_folds:
+    violence_videos_path = path_videos+'/'+fold+'/Violence'
+    nonviolence_videos_path = path_videos+'/'+fold+'/NonViolence'
+    
+    violence_videos_path_out = path_frames+'/'+fold+'/Violence'
+    nonviolence_videos_path_out = path_frames+'/'+fold+'/NonViolence'
+    
+    violent_videos_paths = os.listdir(violence_videos_path)
+    nonviolent_videos_paths = os.listdir(nonviolence_videos_path)
+    
+    for video in violent_videos_paths:
+      frames_path_out = os.path.join(path_frames,fold,'Violence',os.path.splitext(video)[0])
+      print(frames_path_out)
+      if not os.path.exists(frames_path_out):
+        os.makedirs(frames_path_out)
+      video2Images2(os.path.join(violence_videos_path,video), frames_path_out)
+      
+    for video in nonviolent_videos_paths:
+      frames_path_out = os.path.join(path_frames,fold,'NonViolence',os.path.splitext(video)[0])
+      print(frames_path_out)
+      if not os.path.exists(frames_path_out):
+        os.makedirs(frames_path_out)
+        
+      video2Images2(os.path.join(nonviolence_videos_path,video), frames_path_out)
