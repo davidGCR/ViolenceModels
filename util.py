@@ -34,11 +34,11 @@ def set_parameter_requires_grad(model, feature_extracting):
 
 
 
-def saveList(path_out,model,curve, numDI, lt):
-  data_file = path_out+'/'+str(model)+'-'+str(numDI)+'-'+str(curve)+'.txt'
+def saveList(path_out,model,curve, numDI, source_type, lista):
+  data_file = path_out+'/'+str(model)+'-'+source_type+'-'+str(numDI)+'-'+str(curve)+'.txt'
   with open(data_file, 'wb') as filehandle:
       # store the data as binary data stream
-      pickle.dump(lt, filehandle)
+      pickle.dump(lista, filehandle)
       print('saved ... ',data_file)
 
 

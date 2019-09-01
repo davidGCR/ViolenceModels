@@ -10,7 +10,7 @@ from initializeModel import *
 from util import *
 
 
-##Create dataset
+# #Create dataset
 # path_violence = '/content/drive/My Drive/VIOLENCE DATASETS/HockeyFightsFrames/Fights'
 # path_noviolence = '/content/drive/My Drive/VIOLENCE DATASETS/HockeyFightsFrames/noFights'
 # datasetAll, labelsAll, numFramesAll = createDataset(path_violence,path_noviolence)
@@ -42,7 +42,8 @@ from util import *
 #     ]),
 # }
 
-# tb = TensorBoardColab()
+# # tb = TensorBoardColab()
+
 # train_lost = []
 # train_acc = []
 # test_lost = []
@@ -53,19 +54,19 @@ from util import *
 # avgmaxDuration = 1.66
 
 
-# modelType = 'alexnetv1'
-# interval_duration = 0.3
-# numDiPerVideos = 1
-# dataset_source = 'frames'
-# debugg_mode = False
-# num_workers = 4
-# batch_size = 64
-# num_epochs = 15
-# feature_extract = True
-# path_models = '/content/drive/My Drive/VIOLENCE DATASETS/ViolentFlows/Models/'
-# path_results = '/content/drive/My Drive/VIOLENCE DATASETS/ViolentFlows/Results'
+modelType = 'alexnetv1'
+interval_duration = 0.3
+numDiPerVideos = 1
+dataset_source = 'frames'
+debugg_mode = False
+num_workers = 4
+batch_size = 64
+num_epochs = 15
+feature_extract = True
+path_models = '/media/david/datos/Violence DATA/violentflows/Models/'
+path_results = '/media/david/datos/Violence DATA/violentflows/movies/Results'
 
-# gpath = '/content/drive/My Drive/VIOLENCE DATASETS/ViolentFlows/5Folds Frames'
+# gpath = '/media/david/datos/Violence DATA/violentflows/movies/movies Frames'
 
 # debugg_mode = False
 
@@ -125,15 +126,15 @@ from util import *
 #       test_lost.append(epoch_loss_test)
 #       test_acc.append(epoch_acc_test)
       
-#       tb.save_value("trainLoss", "train_loss", foldidx*num_epochs + epoch, epoch_loss_train)
-#       tb.save_value("trainAcc", "train_acc", foldidx*num_epochs + epoch, epoch_acc_train)
-#       tb.save_value("testLoss", "test_loss", foldidx*num_epochs + epoch, epoch_loss_test)
-#       tb.save_value("testAcc", "test_acc", foldidx*num_epochs + epoch, epoch_acc_test)
+#     #   tb.save_value("trainLoss", "train_loss", foldidx*num_epochs + epoch, epoch_loss_train)
+#     #   tb.save_value("trainAcc", "train_acc", foldidx*num_epochs + epoch, epoch_acc_train)
+#     #   tb.save_value("testLoss", "test_loss", foldidx*num_epochs + epoch, epoch_loss_test)
+#     #   tb.save_value("testAcc", "test_acc", foldidx*num_epochs + epoch, epoch_acc_test)
 
-#       tb.flush_line('train_loss')
-#       tb.flush_line('train_acc')
-#       tb.flush_line('test_loss')
-#       tb.flush_line('test_acc')
+#     #   tb.flush_line('train_loss')
+#     #   tb.flush_line('train_acc')
+#     #   tb.flush_line('test_loss')
+#     #   tb.flush_line('test_acc')
      
 # #     filepath = path_models+str(modelType)+'('+str(numDiPerVideos)+'di)-fold-'+str(foldidx)+'.pt'
 # #     torch.save({
@@ -149,15 +150,13 @@ from util import *
 # saveList(path_results,modelType,'train_acc', numDiPerVideos, train_acc)
 # saveList(path_results,modelType,'test_lost', numDiPerVideos, test_lost)
 # saveList(path_results,modelType,'test_acc', numDiPerVideos, test_acc)
+
 # import torch
-
 # print(torch.cuda.current_device())
-
 # print(torch.cuda.device(0))
-
 # print(torch.cuda.device_count())
-
 # print(torch.cuda.get_device_name(0))
-
 # print(torch.cuda.is_available())
 # videos2ImagesFromKfols('/media/david/datos/Violence DATA/violentflows/movies','/media/david/datos/Violence DATA/violentflows/movies Frames')
+
+saveList(path_results,modelType,'pruebas', numDiPerVideos, dataset_source, [4,2,1,3]])
