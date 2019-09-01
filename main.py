@@ -149,15 +149,15 @@ from util import *
 # saveList(path_results,modelType,'train_acc', numDiPerVideos, train_acc)
 # saveList(path_results,modelType,'test_lost', numDiPerVideos, test_lost)
 # saveList(path_results,modelType,'test_acc', numDiPerVideos, test_acc)
-import torch
+# import torch
 
-print(torch.cuda.current_device())
+# print(torch.cuda.current_device())
 
-print(torch.cuda.device(0))
+# print(torch.cuda.device(0))
 
-print(torch.cuda.device_count())
+# print(torch.cuda.device_count())
 
-print(torch.cuda.get_device_name(0))
+# print(torch.cuda.get_device_name(0))
 
-print(torch.cuda.is_available())
-#videos2ImagesFromKfols('/media/david/datos/Violence DATA/violentflows/movies','/media/david/datos/Violence DATA/violentflows/movies Frames')
+# print(torch.cuda.is_available())
+# videos2ImagesFromKfols('/media/david/datos/Violence DATA/violentflows/movies','/media/david/datos/Violence DATA/violentflows/movies Frames')
