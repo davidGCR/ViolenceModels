@@ -51,7 +51,7 @@ def k_folds(n_splits, subjects):
 
 def build_paths(gpath, list_paths):
     for idx,path in enumerate(list_paths):
-        list_paths[idx] = gpath + list_paths[idx]
+        list_paths[idx] = gpath + str(list_paths[idx])
     return list_paths
 
 def getAllPaths(gpath, test_idx):
