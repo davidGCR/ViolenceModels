@@ -38,8 +38,8 @@ def saveList(path_out,model,curve, numDI, source_type, lista):
   data_file = path_out+'/'+str(model)+'-'+source_type+'-'+str(numDI)+'-'+str(curve)+'.txt'
   with open(data_file, 'wb') as filehandle:
       # store the data as binary data stream
-      pickle.dump(lista, filehandle)
-      print('saved ... ',data_file)
+    pickle.dump(lista, filehandle)
+    print('saved ... ',data_file)
 
 
 def loadList(name):
