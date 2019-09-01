@@ -184,4 +184,4 @@ saveList(path_results,modelType,'test_acc', numDiPerVideos, dataset_source, test
 # print(torch.cuda.is_available())
 # videos2ImagesFromKfols('/media/david/datos/Violence DATA/violentflows/movies','/media/david/datos/Violence DATA/violentflows/movies Frames')
 
-saveList(path_results,modelType,'pruebas', numDiPerVideos, dataset_source, [4,2,1,3])
+# saveList(path_results,modelType,'pruebas', numDiPerVideos, dataset_source, [4,2,1,3])
