@@ -85,8 +85,8 @@ def k_folds_from_folders(gpath, n_splits):
     test_labels = []
 
     for test_folder in folds:
-        gpath_violence = gpath + test_folder + "/Violence/"
-        gpath_noviolence = gpath + test_folder + "/NonViolence/"
+        gpath_violence = gpath + '/' + test_folder + "/Violence/"
+        gpath_noviolence = gpath + '/' + test_folder + "/NonViolence/"
         test_paths_violence = os.listdir(gpath_violence)
         test_paths_noviolence = os.listdir(gpath_noviolence)
         
