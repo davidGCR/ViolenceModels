@@ -67,8 +67,8 @@ def getAllPaths(gpath, test_idx):
             test_paths_violence = os.listdir(gpath_violence)
             test_paths_noviolence = os.listdir(gpath_noviolence)
 
-            test_paths_violence = build_paths(test_paths_violence,test_paths_violence)
-            test_paths_noviolence = build_paths(test_paths_noviolence,test_paths_noviolence)
+            test_paths_violence = build_paths(gpath_violence,test_paths_violence)
+            test_paths_noviolence = build_paths(gpath_noviolence,test_paths_noviolence)
             all_paths = all_paths + test_paths_violence + test_paths_noviolence
             all_labels = (
                 all_labels
