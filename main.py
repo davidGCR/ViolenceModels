@@ -81,7 +81,7 @@ avgmaxDuration = 1.66
 
 modelType = 'alexnetv1'
 interval_duration = 0.3
-numDiPerVideos = 2
+numDiPerVideos = 3
 dataset_source = 'frames'
 debugg_mode = False
 num_workers = 4
@@ -89,7 +89,7 @@ batch_size = 64
 num_epochs = 15
 feature_extract = True
 path_models = '/media/david/datos/Violence DATA/violentflows/Models/'
-path_results = '/media/david/datos/Violence DATA/violentflows/Results'
+path_results = '/media/david/datos/Violence DATA/violentflows/Results/'+dataset_source
 
 gpath = '/media/david/datos/Violence DATA/violentflows/movies Frames'
 

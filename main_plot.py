@@ -2,7 +2,7 @@ from plot import *
 import matplotlib.pyplot as plt
 ###From Pickle
 modelType = 'alexnetv1-1-'
-path = '/media/david/datos/Violence DATA/violentflows/Results/'
+path = '/media/david/datos/Violence DATA/violentflows/Results/frames'
 
 train_lost = loadList(path+modelType+'train_lost.txt')
 train_acc = loadList(path+modelType+'train_acc.txt')
