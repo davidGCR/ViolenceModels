@@ -49,36 +49,51 @@ def k_folds(n_splits, subjects):
         yield train_idx, test_idx
 
 
+def build_paths(gpath, list_paths):
+    for idx,path in enumerate(list_paths):
+        list_paths[idx] = gpath + list_paths[idx]
+    return list_paths
+
 def getAllPaths(gpath, test_idx):
     all_paths = []
     all_labels = []
     llist = os.listdir(gpath)
     for subfolder in llist:
-
         if subfolder != str(test_idx):
             print(subfolder)
-            test_paths_violence = os.listdir(gpath + "/" + subfolder + "/Violence/")
-            test_paths_noviolence = os.listdir(
-                gpath + "/" + subfolder + "/NonViolence/"
-            )
+            gpath_violence = gpath + "/" + subfolder + "/Violence/"
+            gpath_noviolence = gpath + "/" + subfolder + "/NonViolence/"
+
+            test_paths_violence = os.listdir(gpath_violence)
+            test_paths_noviolence = os.listdir(gpath_noviolence)
+
+            test_paths_violence = build_paths(test_paths_violence,test_paths_violence)
+            test_paths_noviolence = build_paths(test_paths_noviolence,test_paths_noviolence)
             all_paths = all_paths + test_paths_violence + test_paths_noviolence
             all_labels = (
                 all_labels
                 + list([1] * len(test_paths_violence))
                 + list([0] * len(test_paths_noviolence))
             )
+    
     return all_paths, all_labels
-
 
 def k_folds_from_folders(gpath, n_splits):
     #     folds = np.arange(1,n_splits+1)
     folds = os.listdir(gpath)
     test_videos = []
     test_labels = []
+
     for test_folder in folds:
-        test_paths_violence = os.listdir(gpath + test_folder + "/Violence/")
-        test_paths_noviolence = os.listdir(gpath + test_folder + "/NonViolence/")
+        gpath_violence = gpath + test_folder + "/Violence/"
+        gpath_noviolence = gpath + test_folder + "/NonViolence/"
+        test_paths_violence = os.listdir(gpath_violence)
+        test_paths_noviolence = os.listdir(gpath_noviolence)
+        
+        test_paths_violence = build_paths(gpath_violence, test_paths_violence)
+        test_paths_noviolence = build_paths(gpath_noviolence, test_paths_noviolence)
         test_videos = test_paths_violence + test_paths_noviolence
+        
         test_labels = list([1] * len(test_paths_violence)) + list(
             [0] * len(test_paths_noviolence)
         )
