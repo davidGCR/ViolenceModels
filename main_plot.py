@@ -1,7 +1,8 @@
-from plot import * 
+from plot import *
+import matplotlib.pyplot as plt
 ###From Pickle
 modelType = 'alexnetv1-1-'
-path = '/media/david/datos/Violence DATA/violentflows/Results'
+path = '/media/david/datos/Violence DATA/violentflows/Results/'
 
 train_lost = loadList(path+modelType+'train_lost.txt')
 train_acc = loadList(path+modelType+'train_acc.txt')
@@ -10,7 +11,26 @@ test_acc = loadList(path+modelType+'test_acc.txt')
 
 num_epochs = int(len(train_lost)/5)
 print('len: ',len(train_lost))
-print('num_epochs size: ',num_epochs)
+print('num_epochs size: ', num_epochs)
 
-plotScalarFolds(train_acc,train_lost,num_epochs,'Train')
-plotScalarFolds(test_acc,test_lost,num_epochs,'Test')
+fig2 = plt.figure(figsize=(12,12))
+
+plotScalarFolds(train_acc,train_lost,num_epochs,'Train',fig2,3,2,1)
+plotScalarFolds(test_acc, test_lost, num_epochs, 'Test',fig2,3,2,3)
+
+avgTrainAcc = getAverageFromFolds(train_acc,num_epochs)
+avgTrainLost = getAverageFromFolds(train_lost,num_epochs)
+avgTestAcc = getAverageFromFolds(test_acc,num_epochs)
+avgTestLost = getAverageFromFolds(test_lost, num_epochs)
+
+plotScalarCombined(avgTrainLost,avgTestLost, num_epochs,'Error Promedio','Error',fig2,3,2,5)
+plotScalarCombined(avgTrainAcc, avgTestAcc, num_epochs, 'Tasa de Acierto Promedio', 'Tasa de Acierto',fig2,3,2,6)
+
+plt.show()
+
+max_acc_train = []
+max_acc_test = []
+lastEpoch = 15
+
+print('max test accuracy ', np.amax(np.array(avgTestAcc[0:lastEpoch])))
+avgTestAcc[0:lastEpoch]

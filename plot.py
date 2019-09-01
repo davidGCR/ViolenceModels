@@ -24,12 +24,12 @@ def getAverageFromFolds(llist, nepochs):
   
   
 # print(len(train_lost))
-def plotScalarFolds(listF,listL, tepochs,typ):
-  fig2 = plt.figure(figsize=(12,5))
+def plotScalarFolds(listF,listL, tepochs,typ, fig2, rows,cols, num):
+  # fig2 = plt.figure(figsize=(12,5))
   
   for i in range(0,len(listF),tepochs):
   
-    a = fig2.add_subplot(1, 2, 1)
+    a = fig2.add_subplot(rows, cols, num)
     x_train_acc = np.array(listF[i:i+tepochs])
     
     plt.plot(np.arange(0, tepochs, 1),x_train_acc)
@@ -38,7 +38,7 @@ def plotScalarFolds(listF,listL, tepochs,typ):
     a.set_title(str(typ)+' - Tasa de Acierto')
 #     plt.legend(['Iteracion 1', 'Iteracion 2', 'Iteracion 3', 'Iteracion 4', 'Iteracion 5'], loc='upper right',fontsize='medium')
     
-    a = fig2.add_subplot(1, 2, 2)
+    a = fig2.add_subplot(rows, cols, num+1)
     x_train_lost = np.array(listL[i:i+tepochs])
     plt.plot(np.arange(0, tepochs, 1),x_train_lost)
     plt.xlabel('Epoca')
@@ -47,16 +47,17 @@ def plotScalarFolds(listF,listL, tepochs,typ):
     plt.legend(['Iteracion 1', 'Iteracion 2', 'Iteracion 3', 'Iteracion 4', 'Iteracion 5'], loc='upper right',fontsize='medium')
     
 #   plt.legend(['Iteracion 1', 'Iteracion 2', 'Iteracion 3', 'Iteracion 4', 'Iteracion 5'], loc='upper right',fontsize='medium')
-  plt.show()
+  # plt.show()
   
-def plotScalarCombined(trainlist,testlist, tepochs,title, ylabel):
-  fig2 = plt.figure(figsize=(12,5))
-  
+def plotScalarCombined(trainlist,testlist, tepochs,title, ylabel, fig2, rows, cols, num):
+  # # # # # # fig2 = plt.figure(figsize=(12,5))
+  a = fig2.add_subplot(rows, cols, num)
+
   x = np.arange(0, tepochs, 1)
   plt.plot(x,trainlist,'r')
   plt.plot(x,testlist,'b')
   plt.xlabel('Epoca')
   plt.ylabel(ylabel)
-  plt.title(title)
+  a.set_title(title)
   plt.legend(['Train', 'Test'], loc='upper right',fontsize='large')
-  plt.show()
+  # plt.show()
