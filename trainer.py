@@ -1,6 +1,6 @@
 import torch
 import torchvision
-from tensorboardcolab import TensorBoardColab
+# from tensorboardcolab import TensorBoardColab
 import time
 import copy
 
