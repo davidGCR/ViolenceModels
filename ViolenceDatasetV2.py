@@ -142,6 +142,8 @@ class ViolenceDatasetVideos(Dataset):
             print('total DyImags: ', len(dinamycImages))
 
         dinamycImages = torch.stack(dinamycImages, 0)
+        if self.debugg_mode:
+            print('dataset getElement: ',dinamycImages.size())
         
         return dinamycImages, label
 

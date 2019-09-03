@@ -2,41 +2,56 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-def tempMaxPooling(stacked_images):
-    num_dynamic_images = stacked_images.size()[0]
-    tmppool = nn.MaxPool2d((num_dynamic_images, 1))
+def tempMaxPooling(stacked_images,tmppool):
     spermute = stacked_images.permute(2,3,0,1)
     out = tmppool(spermute)
-    out = out.permute(2,3,0,1)
+    out = out.permute(2, 3, 0, 1)
+    out = torch.squeeze(out)
     return out
 
-def main():
-    t1=torch.tensor([[[1,2,3],[4,5,6],[7,6,9]],[[10,20,30],[40,50,60],[70,60,90]]])
-    t1 = t1*2.3
-    t1 = t1.float()
+# def main():
+#     t1 = torch.tensor(torch.arange(1, 19))
+#     t1 = torch.reshape(t1,(2,3,3))
+#     t1 = t1*2.3
+#     t1 = t1.float()
     
-    t2=t1*2
-    t2 = t2*0.3
-    t2 = t2.float()
+#     t2 = torch.tensor(torch.arange(19, 37))
+#     t2 = torch.reshape(t2,(2,3,3))
+#     # t2 = t2*0.3
+#     t2 = t2.float()
     
-    t3=t1*3
-    t3 = t3*0.7
-    t3 = t3.float()
+#     t3 = torch.tensor(torch.arange(37, 55))
+#     t3 = torch.reshape(t3,(2,3,3))
+#     # t3 = t3*0.7
+#     t3 = t3.float()
     
-    t4=t1*4
-    t4 = t4*0.005
-    t4 = t4.float()
-    lista = [t1,t2,t3,t4]
-    stack = torch.stack(lista,0)
+#     t4 = torch.tensor(torch.arange(55,73))
+#     t4 = torch.reshape(t4,(2,3,3))
+#     t4 = t4*0.5
+#     t4 = t4.float()
+#     lista = [t1,t2,t3,t4]
+#     ldis = torch.stack(lista,0)
     
-    torch.set_printoptions(precision=10,sci_mode=False)
+#     minibatch = torch.stack([0.3*ldis, 0.2*ldis, 0.0333*ldis, 0.04*ldis, 0.55*ldis],0)
+#     # minibatch = minibatch.permute(1,0,2,3,4)
 
-    print('stack size: ',stack.size())
-    print(stack)
-    out = tempMaxPooling(stack)
-    print('out size: ',out.size())
-    print(out)
+#     print('minibatch size: ', minibatch.size())
+#     # print(minibatch)
+    
+#     torch.set_printoptions(precision=10,sci_mode=False)
 
-if __name__ == "__main__":
-    main()
+#     # print('ldis size: ',ldis.size())
+#     # print(ldis)
+    
+#     num_dynamic_images = minibatch.size()[1]
+#     tmppool = nn.MaxPool2d((num_dynamic_images, 1))
+#     for idx in range(minibatch.size()[0]):
+#         out = tempMaxPooling(minibatch[idx], tmppool)
+#         print('============================================')
+#         print('video images: ',minibatch[idx])
+#         print('out size: ',out.size())
+#         print(out)
+
+# if __name__ == "__main__":
+#     main()
     

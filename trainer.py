@@ -34,6 +34,7 @@ class Trainer:
         running_corrects = 0
         # Iterate over data.
         for inputs, labels in self.dataloaders["train"]:
+            # print('==== dataloader size: ',inputs.size())
             inputs = inputs.permute(1, 0, 2, 3, 4)
             inputs = inputs.to(self.device)
             labels = labels.to(self.device)
@@ -53,7 +54,10 @@ class Trainer:
                     loss2 = self.criterion(aux_outputs, labels)
                     loss = loss1 + 0.4 * loss2
                 else:
+                    
                     outputs = self.model(inputs)
+                    # print('-- outputs size: ', outputs.size())
+                    # print('-- labels size: ',labels.size())
                     loss = self.criterion(outputs, labels)
 
                 _, preds = torch.max(outputs, 1)
@@ -77,6 +81,7 @@ class Trainer:
     def test_epoch(self, epoch):
         running_loss = 0.0
         running_corrects = 0
+        
         # Iterate over data.
         for inputs, labels in self.dataloaders["val"]:
             inputs = inputs.permute(1, 0, 2, 3, 4)
@@ -88,6 +93,8 @@ class Trainer:
             # track history if only in train
             with torch.set_grad_enabled(False):
                 outputs = self.model(inputs)
+                # print('-- outputs size: ', outputs.size())
+                # print('-- labels size: ',labels.size())
                 loss = self.criterion(outputs, labels)
 
                 _, preds = torch.max(outputs, 1)

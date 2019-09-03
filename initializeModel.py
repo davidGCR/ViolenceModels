@@ -8,7 +8,7 @@ from util import set_parameter_requires_grad
 from AlexNet import ViolenceModelAlexNetV1, ViolenceModelAlexNetV2
 from ResNet import *
 
-def initialize_model(model_name, num_classes, feature_extract, numDiPerVideos, use_pretrained=True):
+def initialize_model(model_name, num_classes, feature_extract, numDiPerVideos, joinType, use_pretrained=True):
     # Initialize these variables which will be set in this if statement. Each of these
     #   variables is model specific.
     model_ft = None
@@ -19,7 +19,7 @@ def initialize_model(model_name, num_classes, feature_extract, numDiPerVideos, u
         # set_parameter_requires_grad(model_ft, feature_extract)
         input_size = 224
     elif model_name == "alexnetv2":
-        model_ft = ViolenceModelAlexNetV2(numDiPerVideos, feature_extract)
+        model_ft = ViolenceModelAlexNetV2(numDiPerVideos, joinType,feature_extract)
         # set_parameter_requires_grad(model_ft, feature_extract)
         input_size = 224
 

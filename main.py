@@ -1,29 +1,31 @@
-import torch 
+import torch
 import torchvision
 
 import torchvision.transforms as transforms
-import matplotlib.pyplot as plt 
-import numpy as np 
-import torch.nn as nn 
-import torch.nn.functional as F 
-import torch.optim as optim 
-import os 
-import glob 
-import cv2 
+import matplotlib.pyplot as plt
+import numpy as np
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+import os
+import glob
+import cv2
 from PIL import Image
 from torch.utils.data import Dataset
-from torchvision import models 
-import torch 
-from torchvision import transforms 
-from PIL import Image 
-from torch.autograd import Variable 
-# from tensorboardcolab import TensorBoardColab 
+from torchvision import models
+import torch
+from torchvision import transforms
+from PIL import Image
+from torch.autograd import Variable
+
+# from tensorboardcolab import TensorBoardColab
 import time
 from torch.optim import lr_scheduler
 import numpy as np
 
 import sys
-sys.path.insert(1, '/media/david/datos/PAPERS-SOURCE_CODE/MyCode')
+
+sys.path.insert(1, "/media/david/datos/PAPERS-SOURCE_CODE/MyCode")
 from AlexNet import *
 from ViolenceDatasetV2 import *
 from trainer import *
@@ -32,7 +34,7 @@ from operator import itemgetter
 import random
 from initializeModel import *
 from util import *
-from  verifyParameters import *
+from verifyParameters import *
 
 # Detect if we have a GPU available
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -43,18 +45,22 @@ input_size = 224
 # Data augmentation and normalization for training
 # Just normalization for validation
 data_transforms = {
-    'train': transforms.Compose([
-        transforms.RandomResizedCrop(input_size),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ]),
-    'val': transforms.Compose([
-        transforms.Resize(input_size),
-        transforms.CenterCrop(input_size),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ]),
+    "train": transforms.Compose(
+        [
+            transforms.RandomResizedCrop(input_size),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        ]
+    ),
+    "val": transforms.Compose(
+        [
+            transforms.Resize(input_size),
+            transforms.CenterCrop(input_size),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        ]
+    ),
 }
 
 # tb = TensorBoardColab()
@@ -69,28 +75,29 @@ best_acc_test = 0.0
 avgmaxDuration = 1.66
 
 
-modelType = 'alexnetv2'
+modelType = "alexnetv2"
 interval_duration = 0.3
 numDiPerVideos = 5
-dataset_source = 'frames'
+dataset_source = "frames"
 debugg_mode = False
 num_workers = 4
 batch_size = 64
-num_epochs = 100
+num_epochs = 40
 feature_extract = True
+joinType = "tempMaxPool"
 # path_models = '/media/david/datos/Violence DATA/violentflows/Models/'
 # path_results = '/media/david/datos/Violence DATA/violentflows/Results/'+dataset_source
 # gpath = '/media/david/datos/Violence DATA/violentflows/movies Frames'
 
 debugg_mode = False
 
-path_models = '/media/david/datos/Violence DATA/HockeyFights/Models'
-path_results = '/media/david/datos/Violence DATA/HockeyFights/Results/'+dataset_source
+path_models = "/media/david/datos/Violence DATA/HockeyFights/Models"
+path_results = "/media/david/datos/Violence DATA/HockeyFights/Results/" + dataset_source
 
-#Create dataset HockeyFights
-path_violence = '/media/david/datos/Violence DATA/HockeyFights/frames/violence'
-path_noviolence = '/media/david/datos/Violence DATA/HockeyFights/frames/nonviolence'
-datasetAll, labelsAll, numFramesAll = createDataset(path_violence,path_noviolence)
+# Create dataset HockeyFights
+path_violence = "/media/david/datos/Violence DATA/HockeyFights/frames/violence"
+path_noviolence = "/media/david/datos/Violence DATA/HockeyFights/frames/nonviolence"
+datasetAll, labelsAll, numFramesAll = createDataset(path_violence, path_noviolence)
 combined = list(zip(datasetAll, labelsAll, numFramesAll))
 random.shuffle(combined)
 datasetAll[:], labelsAll[:], numFramesAll[:] = zip(*combined)
@@ -98,68 +105,96 @@ print(len(datasetAll), len(labelsAll), len(numFramesAll))
 
 # for dataset_train, dataset_train_labels,dataset_test,dataset_test_labels   in k_folds_from_folders(gpath, 5):
 
-for train_idx, test_idx in k_folds(n_splits = 5, subjects = len(datasetAll)):
+for train_idx, test_idx in k_folds(n_splits=5, subjects=len(datasetAll)):
 
-    dataset_train = list(itemgetter(*train_idx)(datasetAll)) 
-    dataset_train_labels =  list(itemgetter(*train_idx)(labelsAll)) 
-    
-    dataset_test = list(itemgetter(*test_idx)(datasetAll)) 
+    dataset_train = list(itemgetter(*train_idx)(datasetAll))
+    dataset_train_labels = list(itemgetter(*train_idx)(labelsAll))
+
+    dataset_test = list(itemgetter(*test_idx)(datasetAll))
     dataset_test_labels = list(itemgetter(*test_idx)(labelsAll))
-    
+
     image_datasets = {
-        'train':ViolenceDatasetVideos(
-            dataset= dataset_train,
+        "train": ViolenceDatasetVideos(
+            dataset=dataset_train,
             labels=dataset_train_labels,
-            spatial_transform = data_transforms['train'],
-            source = dataset_source,
-            interval_duration = interval_duration,
-            difference = 3,
-            maxDuration = avgmaxDuration,
-            nDynamicImages = numDiPerVideos,
-            debugg_mode = debugg_mode
-        ),
-        'val': ViolenceDatasetVideos(
-            dataset= dataset_test,
-            labels=dataset_test_labels,
-            spatial_transform = data_transforms['val'],
-            source = dataset_source,
-            interval_duration = interval_duration,
+            spatial_transform=data_transforms["train"],
+            source=dataset_source,
+            interval_duration=interval_duration,
             difference=3,
-            maxDuration = avgmaxDuration,
-            nDynamicImages = numDiPerVideos,
-            debugg_mode = debugg_mode
-        )
+            maxDuration=avgmaxDuration,
+            nDynamicImages=numDiPerVideos,
+            debugg_mode=debugg_mode,
+        ),
+        "val": ViolenceDatasetVideos(
+            dataset=dataset_test,
+            labels=dataset_test_labels,
+            spatial_transform=data_transforms["val"],
+            source=dataset_source,
+            interval_duration=interval_duration,
+            difference=3,
+            maxDuration=avgmaxDuration,
+            nDynamicImages=numDiPerVideos,
+            debugg_mode=debugg_mode,
+        ),
     }
     dataloaders_dict = {
-        'train': torch.utils.data.DataLoader(image_datasets['train'], batch_size=batch_size, shuffle=True, num_workers=num_workers),
-        'val': torch.utils.data.DataLoader(image_datasets['val'], batch_size=batch_size, shuffle=True, num_workers=num_workers)
+        "train": torch.utils.data.DataLoader(
+            image_datasets["train"],
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=num_workers,
+        ),
+        "val": torch.utils.data.DataLoader(
+            image_datasets["val"],
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=num_workers,
+        ),
     }
-    
+
     model = None
-    
-    model, input_size = initialize_model(model_name = modelType, num_classes = 2, feature_extract=feature_extract, numDiPerVideos=numDiPerVideos, use_pretrained=True)
+
+    model, input_size = initialize_model(
+        model_name=modelType,
+        num_classes=2,
+        feature_extract=feature_extract,
+        numDiPerVideos=numDiPerVideos,
+        joinType=joinType,
+        use_pretrained=True,
+    )
     model.to(device)
     params_to_update = verifiParametersToTrain(model)
     # Observe that all parameters are being optimized
     optimizer = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
-    
+
     # Decay LR by a factor of 0.1 every 7 epochs
     # exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
-    exp_lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, verbose=True)
-    
+    exp_lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, patience=5, verbose=True
+    )
+
     ### trainer
-    trainer = Trainer(model,dataloaders_dict,criterion,optimizer,exp_lr_scheduler,device,num_epochs)
-    
+    trainer = Trainer(
+        model,
+        dataloaders_dict,
+        criterion,
+        optimizer,
+        exp_lr_scheduler,
+        device,
+        num_epochs,
+    )
+
     for epoch in range(1, num_epochs + 1):
-      # Train and evaluate
-      epoch_loss_train, epoch_acc_train  = trainer.train_epoch(epoch)
-      epoch_loss_test, epoch_acc_test = trainer.test_epoch(epoch)
-      
-      train_lost.append(epoch_loss_train)
-      train_acc.append(epoch_acc_train)
-      test_lost.append(epoch_loss_test)
-      test_acc.append(epoch_acc_test)
-      
+        print("----- Epoch {}/{}".format(epoch, num_epochs))
+        # Train and evaluate
+        epoch_loss_train, epoch_acc_train = trainer.train_epoch(epoch)
+        epoch_loss_test, epoch_acc_test = trainer.test_epoch(epoch)
+
+        train_lost.append(epoch_loss_train)
+        train_acc.append(epoch_acc_train)
+        test_lost.append(epoch_loss_test)
+        test_acc.append(epoch_acc_test)
+
     #   tb.save_value("trainLoss", "train_loss", foldidx*num_epochs + epoch, epoch_loss_train)
     #   tb.save_value("trainAcc", "train_acc", foldidx*num_epochs + epoch, epoch_acc_train)
     #   tb.save_value("testLoss", "test_loss", foldidx*num_epochs + epoch, epoch_loss_test)
@@ -169,21 +204,57 @@ for train_idx, test_idx in k_folds(n_splits = 5, subjects = len(datasetAll)):
     #   tb.flush_line('train_acc')
     #   tb.flush_line('test_loss')
     #   tb.flush_line('test_acc')
-     
-#     filepath = path_models+str(modelType)+'('+str(numDiPerVideos)+'di)-fold-'+str(foldidx)+'.pt'
-#     torch.save({
-#         'kfold': foldidx,
-#         'model_state_dict': model.state_dict(),
-#         'optimizer_state_dict': optimizer.state_dict()
-#         }, filepath)
-     
+
+    #     filepath = path_models+str(modelType)+'('+str(numDiPerVideos)+'di)-fold-'+str(foldidx)+'.pt'
+    #     torch.save({
+    #         'kfold': foldidx,
+    #         'model_state_dict': model.state_dict(),
+    #         'optimizer_state_dict': optimizer.state_dict()
+    #         }, filepath)
+
     foldidx = foldidx + 1
-    
-print('saving loss and acc history...')  
-saveList(path_results,modelType,'decay-train_lost', numDiPerVideos, dataset_source,feature_extract, train_lost)
-saveList(path_results,modelType,'decay-train_acc', numDiPerVideos, dataset_source, feature_extract, train_acc)
-saveList(path_results,modelType,'decay-test_lost', numDiPerVideos, dataset_source, feature_extract, test_lost)
-saveList(path_results,modelType,'decay-test_acc', numDiPerVideos, dataset_source, feature_extract, test_acc)
+
+print("saving loss and acc history...")
+saveList(
+    path_results,
+    modelType,
+    "decay-train_lost",
+    numDiPerVideos,
+    dataset_source,
+    feature_extract,
+    joinType,
+    train_lost,
+)
+saveList(
+    path_results,
+    modelType,
+    "decay-train_acc",
+    numDiPerVideos,
+    dataset_source,
+    feature_extract,
+    joinType,
+    train_acc,
+)
+saveList(
+    path_results,
+    modelType,
+    "decay-test_lost",
+    numDiPerVideos,
+    dataset_source,
+    feature_extract,
+    joinType,
+    test_lost,
+)
+saveList(
+    path_results,
+    modelType,
+    "decay-test_acc",
+    numDiPerVideos,
+    dataset_source,
+    feature_extract,
+    joinType,
+    test_acc,
+)
 
 # import torch
 # print(torch.cuda.current_device())
