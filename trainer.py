@@ -27,7 +27,7 @@ class Trainer:
         self.scheduler = scheduler
 
     def train_epoch(self, epoch):
-        self.scheduler.step()
+        self.scheduler.step(epoch)
         self.model.train()  # Set model to training mode
         is_inception = False
         running_loss = 0.0

@@ -1,8 +1,10 @@
 from plot import *
 import matplotlib.pyplot as plt
 ###From Pickle
-modelType = 'alexnetv1-1-'
-path = '/media/david/datos/Violence DATA/violentflows/Results/frames'
+# modelType = 'alexnetv2-frames-Finetuned:False-2-decay-'
+# path = '/media/david/datos/Violence DATA/violentflows/Results/frames/'
+modelType = 'alexnetv2-frames-Finetuned:False-2-decay-'
+path = '/media/david/datos/Violence DATA/HockeyFights/Results/frames/'
 
 train_lost = loadList(path+modelType+'train_lost.txt')
 train_acc = loadList(path+modelType+'train_acc.txt')
@@ -30,7 +32,7 @@ plt.show()
 
 max_acc_train = []
 max_acc_test = []
-lastEpoch = 15
+lastEpoch = 100
 
 print('max test accuracy ', np.amax(np.array(avgTestAcc[0:lastEpoch])))
 avgTestAcc[0:lastEpoch]

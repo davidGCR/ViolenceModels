@@ -34,8 +34,8 @@ def set_parameter_requires_grad(model, feature_extracting):
 
 
 
-def saveList(path_out,model,curve, numDI, source_type, lista):
-  data_file = path_out+'/'+str(model)+'-'+source_type+'-'+str(numDI)+'-'+str(curve)+'.txt'
+def saveList(path_out,model,curve, numDI, source_type, feature_extract, lista):
+  data_file = path_out+'/'+str(model)+'-'+source_type+'-Finetuned:'+str(not feature_extract)+'-'+str(numDI)+'-'+str(curve)+'.txt'
   with open(data_file, 'wb') as filehandle:
       # store the data as binary data stream
     pickle.dump(lista, filehandle)
@@ -57,12 +57,33 @@ def video2Images2(video_path, path_out):
   index_frame = 1
   while(True):
       ret, frame = vid.read()
-      if not ret: 
-          break
+      if not ret:
+        # print('video can not read ...')
+        break
       name = path_out+'/'+'frame' + str("{0:03}".format(index_frame)) + '.jpg'
       print ('Creating...' + name)
       cv2.imwrite(name, frame)
-      index_frame += 1 
+      index_frame += 1
+      
+def hockeyVideos2Frames(path_videos, path_frames):
+  listViolence = os.listdir(os.path.join(path_videos, 'violence'))
+  listViolence.sort(key=lambda f: int("".join(filter(str.isdigit, f))))
+  listnonViolence = os.listdir(os.path.join(path_videos, 'nonviolence'))
+  listnonViolence.sort(key=lambda f: int("".join(filter(str.isdigit, f))))
+  
+  for idx,video in enumerate(listViolence):
+    path_video = os.path.join(path_videos, 'violence', video)
+    path_frames_out = os.path.join(path_frames, 'violence', str(idx+1))
+    if not os.path.exists(path_frames_out):
+        os.makedirs(path_frames_out)
+    video2Images2(path_video, path_frames_out)
+
+  for idx,video in enumerate(listnonViolence):
+    path_video = os.path.join(path_videos, 'nonviolence', video)
+    path_frames_out = os.path.join(path_frames, 'nonviolence', str(idx+1))
+    if not os.path.exists(path_frames_out):
+        os.makedirs(path_frames_out)
+    video2Images2(path_video,path_frames_out)
 
 def videos2ImagesFromKfols(path_videos, path_frames):
   list_folds = os.listdir(path_videos) ## [1 2 3 4 5]

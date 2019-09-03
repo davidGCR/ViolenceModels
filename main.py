@@ -34,16 +34,6 @@ from initializeModel import *
 from util import *
 from  verifyParameters import *
 
-
-# #Create dataset
-# path_violence = '/content/drive/My Drive/VIOLENCE DATASETS/HockeyFightsFrames/Fights'
-# path_noviolence = '/content/drive/My Drive/VIOLENCE DATASETS/HockeyFightsFrames/noFights'
-# datasetAll, labelsAll, numFramesAll = createDataset(path_violence,path_noviolence)
-# combined = list(zip(datasetAll, labelsAll, numFramesAll))
-# random.shuffle(combined)
-# datasetAll[:], labelsAll[:], numFramesAll[:] = zip(*combined)
-# print(len(datasetAll), len(labelsAll), len(numFramesAll))
-
 # Detect if we have a GPU available
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Setup the loss fxn
@@ -79,24 +69,42 @@ best_acc_test = 0.0
 avgmaxDuration = 1.66
 
 
-modelType = 'alexnetv1'
+modelType = 'alexnetv2'
 interval_duration = 0.3
-numDiPerVideos = 3
+numDiPerVideos = 5
 dataset_source = 'frames'
 debugg_mode = False
 num_workers = 4
 batch_size = 64
-num_epochs = 15
+num_epochs = 100
 feature_extract = True
-path_models = '/media/david/datos/Violence DATA/violentflows/Models/'
-path_results = '/media/david/datos/Violence DATA/violentflows/Results/'+dataset_source
-
-gpath = '/media/david/datos/Violence DATA/violentflows/movies Frames'
+# path_models = '/media/david/datos/Violence DATA/violentflows/Models/'
+# path_results = '/media/david/datos/Violence DATA/violentflows/Results/'+dataset_source
+# gpath = '/media/david/datos/Violence DATA/violentflows/movies Frames'
 
 debugg_mode = False
 
-for dataset_train, dataset_train_labels,dataset_test,dataset_test_labels   in k_folds_from_folders(gpath, 5):
-#   print(dataset_test)
+path_models = '/media/david/datos/Violence DATA/HockeyFights/Models'
+path_results = '/media/david/datos/Violence DATA/HockeyFights/Results/'+dataset_source
+
+#Create dataset HockeyFights
+path_violence = '/media/david/datos/Violence DATA/HockeyFights/frames/violence'
+path_noviolence = '/media/david/datos/Violence DATA/HockeyFights/frames/nonviolence'
+datasetAll, labelsAll, numFramesAll = createDataset(path_violence,path_noviolence)
+combined = list(zip(datasetAll, labelsAll, numFramesAll))
+random.shuffle(combined)
+datasetAll[:], labelsAll[:], numFramesAll[:] = zip(*combined)
+print(len(datasetAll), len(labelsAll), len(numFramesAll))
+
+# for dataset_train, dataset_train_labels,dataset_test,dataset_test_labels   in k_folds_from_folders(gpath, 5):
+
+for train_idx, test_idx in k_folds(n_splits = 5, subjects = len(datasetAll)):
+
+    dataset_train = list(itemgetter(*train_idx)(datasetAll)) 
+    dataset_train_labels =  list(itemgetter(*train_idx)(labelsAll)) 
+    
+    dataset_test = list(itemgetter(*test_idx)(datasetAll)) 
+    dataset_test_labels = list(itemgetter(*test_idx)(labelsAll))
     
     image_datasets = {
         'train':ViolenceDatasetVideos(
@@ -136,7 +144,8 @@ for dataset_train, dataset_train_labels,dataset_test,dataset_test_labels   in k_
     optimizer = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
     
     # Decay LR by a factor of 0.1 every 7 epochs
-    exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+    # exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+    exp_lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, verbose=True)
     
     ### trainer
     trainer = Trainer(model,dataloaders_dict,criterion,optimizer,exp_lr_scheduler,device,num_epochs)
@@ -171,10 +180,10 @@ for dataset_train, dataset_train_labels,dataset_test,dataset_test_labels   in k_
     foldidx = foldidx + 1
     
 print('saving loss and acc history...')  
-saveList(path_results,modelType,'train_lost', numDiPerVideos, dataset_source, train_lost)
-saveList(path_results,modelType,'train_acc', numDiPerVideos, dataset_source, train_acc)
-saveList(path_results,modelType,'test_lost', numDiPerVideos, dataset_source, test_lost)
-saveList(path_results,modelType,'test_acc', numDiPerVideos, dataset_source, test_acc)
+saveList(path_results,modelType,'decay-train_lost', numDiPerVideos, dataset_source,feature_extract, train_lost)
+saveList(path_results,modelType,'decay-train_acc', numDiPerVideos, dataset_source, feature_extract, train_acc)
+saveList(path_results,modelType,'decay-test_lost', numDiPerVideos, dataset_source, feature_extract, test_lost)
+saveList(path_results,modelType,'decay-test_acc', numDiPerVideos, dataset_source, feature_extract, test_acc)
 
 # import torch
 # print(torch.cuda.current_device())
