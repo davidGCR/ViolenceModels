@@ -111,38 +111,38 @@ class ViolenceModelAlexNetV2(nn.Module): ##ViolenceModel2
     return x
   
   def forward(self, x):
-    if self.joinType == 'cat':
-      x = self.catType(x)
-      x = self.linear(x)
-    elif self.joinType == 'tempMaxPool':
-      x = self.tempMaxPoolingType(x)
-      x = self.classifier(x)
-      x = self.linear(x)
-    # lista = []
-    # # x = x.permute(1, 0, 2, 3, 4)
-    # # print('X size: ',x.size())
-    # for dimage in range(0, self.seqLen):
-    #   feature = self.convNet(x[dimage])
-    #   feature = self.avgpool(feature)
-    #   lista.append(feature)
+    # if self.joinType == 'cat':
+    #   x = self.catType(x)
+    #   x = self.linear(x)
+    # elif self.joinType == 'tempMaxPool':
+    #   x = self.tempMaxPoolingType(x)
+    #   x = self.classifier(x)
+    #   x = self.linear(x)
+    lista = []
+    # x = x.permute(1, 0, 2, 3, 4)
+    # print('X size: ',x.size())
+    for dimage in range(0, self.seqLen):
+      feature = self.convNet(x[dimage])
+      feature = self.avgpool(feature)
+      lista.append(feature)
 
-    # minibatch = torch.stack(lista, 0)
-    # minibatch = minibatch.permute(1, 0, 2, 3, 4)
-    # # print('minibatch size: ', minibatch.size())
+    minibatch = torch.stack(lista, 0)
+    minibatch = minibatch.permute(1, 0, 2, 3, 4)
+    # print('minibatch size: ', minibatch.size())
     
-    # num_dynamic_images = self.seqLen
-    # tmppool = nn.MaxPool2d((num_dynamic_images, 1))
-    # lista_minibatch = []
-    # for idx in range(minibatch.size()[0]):
-    #     out = tempMaxPooling(minibatch[idx], tmppool)
-    #     lista_minibatch.append(out)
-    #     # print('out size: ',out.size())
-    # feature = torch.stack(lista_minibatch, 0)
-    # # print('minibatch size: ', feature.size())
-    # feature = torch.flatten(feature, 1)
-    # feature = self.classifier(feature)
-    # # view = feature.view(feature.size(0), 4096)
-    # # x = torch.cat(lista, dim=1)
-    # # print('forward view: ',feature.size(), view.size())
-    # x = self.linear(feature)
+    num_dynamic_images = self.seqLen
+    tmppool = nn.MaxPool2d((num_dynamic_images, 1))
+    lista_minibatch = []
+    for idx in range(minibatch.size()[0]):
+        out = tempMaxPooling(minibatch[idx], tmppool)
+        lista_minibatch.append(out)
+        # print('out size: ',out.size())
+    feature = torch.stack(lista_minibatch, 0)
+    # print('minibatch size: ', feature.size())
+    feature = torch.flatten(feature, 1)
+    feature = self.classifier(feature)
+    # view = feature.view(feature.size(0), 4096)
+    # x = torch.cat(lista, dim=1)
+    # print('forward view: ',feature.size(), view.size())
+    x = self.linear(feature)
     return x

@@ -77,12 +77,12 @@ avgmaxDuration = 1.66
 
 modelType = "alexnetv2"
 interval_duration = 0.3
-numDiPerVideos = 5
+numDiPerVideos = 3
 dataset_source = "frames"
 debugg_mode = False
 num_workers = 4
 batch_size = 64
-num_epochs = 40
+num_epochs = 50
 feature_extract = True
 joinType = "tempMaxPool"
 # path_models = '/media/david/datos/Violence DATA/violentflows/Models/'
