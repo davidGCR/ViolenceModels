@@ -69,6 +69,14 @@ class ViolenceModelAlexNetV2(nn.Module): ##ViolenceModel2
         self.linear = nn.Linear(4096,2)
       self.alexnet = None
 
+  def getFeatureVector(self, x):
+    if self.joinType == 'cat':
+      x = self.catType(x)
+    elif self.joinType == 'tempMaxPool':
+      x = self.tempMaxPoolingType(x)
+      x = self.classifier(x)
+    return x
+
   def catType(self, x):
     lista = []
     for dimage in range(0, self.seqLen):
@@ -79,8 +87,6 @@ class ViolenceModelAlexNetV2(nn.Module): ##ViolenceModel2
       feature = feature.view(feature.size(0), 4096)
       lista.append(feature)
     x = torch.cat(lista, dim=1)  
-    x = self.linear(x)
-        
     return x
 
   def tempMaxPoolingType(self, x):
@@ -101,15 +107,17 @@ class ViolenceModelAlexNetV2(nn.Module): ##ViolenceModel2
 
     feature = torch.stack(lista_minibatch, 0)
     feature = torch.flatten(feature, 1)
-    feature = self.classifier(feature)
-    x = self.linear(feature)
+    
     return x
   
   def forward(self, x):
     if self.joinType == 'cat':
       x = self.catType(x)
+      x = self.linear(x)
     elif self.joinType == 'tempMaxPool':
       x = self.tempMaxPoolingType(x)
+      x = self.classifier(x)
+      x = self.linear(x)
     # lista = []
     # # x = x.permute(1, 0, 2, 3, 4)
     # # print('X size: ',x.size())
