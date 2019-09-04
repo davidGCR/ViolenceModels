@@ -24,7 +24,7 @@ class ViolenceModelAlexNetV1(nn.Module): ##ViolenceModel
       self.linear = nn.Linear(256*6*6*seqLen,2)
       self.alexnet = None
       
-  def getFeatureVector(self, x):
+  def getFeatureVectorTempPool(self, x):
     lista = []
     for dimage in range(0, self.seqLen):
       feature = self.convNet(x[dimage])
@@ -47,6 +47,15 @@ class ViolenceModelAlexNetV1(nn.Module): ##ViolenceModel
     #   x = self.tempMaxPoolingType(x)
     #   x = self.classifier(x)
     return feature
+  
+  def getFeatureVectorCat(self, x):
+    lista = []
+    for dimage in range(0, self.seqLen):
+      feature = self.convNet(x[dimage])
+      feature = feature.view(feature.size(0), 256 * 6 * 6)
+      lista.append(feature)
+    x = torch.cat(lista, dim=1) 
+    return x
 
   def forward(self, x):
     lista = []
@@ -99,7 +108,7 @@ class ViolenceModelAlexNetV2(nn.Module): ##ViolenceModel2
         self.linear = nn.Linear(4096,2)
       self.alexnet = None
 
-  def getFeatureVector(self, x):
+  def getFeatureVectorTempPool(self, x):
     lista = []
     for dimage in range(0, self.seqLen):
       feature = self.convNet(x[dimage])
@@ -125,7 +134,7 @@ class ViolenceModelAlexNetV2(nn.Module): ##ViolenceModel2
     #   x = self.classifier(x)
     return feature
 
-  def catType(self, x):
+  def getFeatureVectorCat(self, x):
     lista = []
     for dimage in range(0, self.seqLen):
       feature = self.convNet(x[dimage])

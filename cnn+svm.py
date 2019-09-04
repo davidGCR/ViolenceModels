@@ -80,7 +80,8 @@ num_workers = 6
 batch_size = 1000
 num_epochs = 40
 feature_extract = True
-joinType = "tempMaxPool"
+# joinType = "tempMaxPool"
+joinType = "cat"
 debugg_mode = False
 
 # Create dataset HockeyFights
@@ -136,7 +137,10 @@ for inputs, labels in dataloaders_dict["train"]:
   # forward
   # track history if only in train
   with torch.set_grad_enabled(True):
-    outputs = model.getFeatureVector(inputs)
+    if joinType == 'cat':
+      outputs = model.getFeatureVectorCat(x)
+    elif joinType == 'tempMaxPool':
+        outputs = model.getFeatureVectorTempPool(inputs)
     outputs = outputs.cpu()
     lista.append(outputs.numpy())
 
