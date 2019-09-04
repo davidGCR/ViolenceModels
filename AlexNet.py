@@ -74,11 +74,19 @@ class ViolenceModelAlexNetV2(nn.Module): ##ViolenceModel2
     for dimage in range(0, self.seqLen):
       feature = self.convNet(x[dimage])
       feature = self.avgpool(feature)
-      feature = torch.flatten(feature, 1)
-      feature = self.classifier(feature)
-      feature = feature.view(feature.size(0), 4096)
       lista.append(feature)
-    x = torch.cat(lista, dim=1) 
+
+    minibatch = torch.stack(lista, 0)
+    minibatch = minibatch.permute(1, 0, 2, 3, 4)
+    num_dynamic_images = self.seqLen
+    tmppool = nn.MaxPool2d((num_dynamic_images, 1))
+    lista_minibatch = []
+    for idx in range(minibatch.size()[0]):
+        out = tempMaxPooling(minibatch[idx], tmppool)
+        lista_minibatch.append(out)
+
+    feature = torch.stack(lista_minibatch, 0)
+    feature = torch.flatten(feature, 1)
     # if self.joinType == 'cat':
     #   x = self.catType(x)
     # elif self.joinType == 'tempMaxPool':
