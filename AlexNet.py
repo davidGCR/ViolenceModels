@@ -14,9 +14,39 @@ class ViolenceModelAlexNetV1(nn.Module): ##ViolenceModel
       set_parameter_requires_grad(self.alexnet, feature_extract)
       
       self.convNet = nn.Sequential(*list(self.alexnet.features.children()))
+
+      # if self.joinType == 'cat':
+      #   self.linear = nn.Linear(4096*seqLen,2)
+      # elif self.joinType == 'tempMaxPool':
+      #   self.linear = nn.Linear(4096,2)
+      # self.alexnet = None
+
       self.linear = nn.Linear(256*6*6*seqLen,2)
       self.alexnet = None
       
+  def getFeatureVector(self, x):
+    lista = []
+    for dimage in range(0, self.seqLen):
+      feature = self.convNet(x[dimage])
+      lista.append(feature)
+
+    minibatch = torch.stack(lista, 0)
+    minibatch = minibatch.permute(1, 0, 2, 3, 4)
+    num_dynamic_images = self.seqLen
+    tmppool = nn.MaxPool2d((num_dynamic_images, 1))
+    lista_minibatch = []
+    for idx in range(minibatch.size()[0]):
+        out = tempMaxPooling(minibatch[idx], tmppool)
+        lista_minibatch.append(out)
+
+    feature = torch.stack(lista_minibatch, 0)
+    feature = torch.flatten(feature, 1)
+    # if self.joinType == 'cat':
+    #   x = self.catType(x)
+    # elif self.joinType == 'tempMaxPool':
+    #   x = self.tempMaxPoolingType(x)
+    #   x = self.classifier(x)
+    return feature
 
   def forward(self, x):
     lista = []
@@ -87,6 +117,7 @@ class ViolenceModelAlexNetV2(nn.Module): ##ViolenceModel2
 
     feature = torch.stack(lista_minibatch, 0)
     feature = torch.flatten(feature, 1)
+    feature = self.classifier(feature)
     # if self.joinType == 'cat':
     #   x = self.catType(x)
     # elif self.joinType == 'tempMaxPool':

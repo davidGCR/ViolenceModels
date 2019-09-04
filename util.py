@@ -48,6 +48,21 @@ def loadList(name):
     hist2 = pickle.load(filehandle)
     return hist2
 
+def loadArray(path_out, model, curve, numDI, source_type, feature_extract, joinType):
+  data_file = path_out+'/'+str(model)+'-'+source_type+'-Finetuned:'+str(not feature_extract)+'-'+str(numDI)+'di-'+joinType+'-'+str(curve)+'.txt'
+  with open(data_file, 'rb') as filehandle:
+    # read the data as binary data stream
+    print('loading... ',data_file)
+    hist2 = pickle.load(filehandle)
+    return hist2
+
+def saveArray(path, array):
+  with open(path,'wb') as f:
+    print('saved ... ',path)
+    pickle.dump(array, f)
+
+
+
 #######################################################################################
 ################################# Videos to Frames ####################################
 #######################################################################################
