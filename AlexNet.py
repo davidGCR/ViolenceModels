@@ -92,7 +92,7 @@ class ViolenceModelAlexNetV2(nn.Module): ##ViolenceModel2
     # elif self.joinType == 'tempMaxPool':
     #   x = self.tempMaxPoolingType(x)
     #   x = self.classifier(x)
-    return x
+    return feature
 
   def catType(self, x):
     lista = []
