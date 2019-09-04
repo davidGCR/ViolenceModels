@@ -70,11 +70,20 @@ class ViolenceModelAlexNetV2(nn.Module): ##ViolenceModel2
       self.alexnet = None
 
   def getFeatureVector(self, x):
-    if self.joinType == 'cat':
-      x = self.catType(x)
-    elif self.joinType == 'tempMaxPool':
-      x = self.tempMaxPoolingType(x)
-      x = self.classifier(x)
+    lista = []
+    for dimage in range(0, self.seqLen):
+      feature = self.convNet(x[dimage])
+      feature = self.avgpool(feature)
+      feature = torch.flatten(feature, 1)
+      feature = self.classifier(feature)
+      feature = feature.view(feature.size(0), 4096)
+      lista.append(feature)
+    x = torch.cat(lista, dim=1) 
+    # if self.joinType == 'cat':
+    #   x = self.catType(x)
+    # elif self.joinType == 'tempMaxPool':
+    #   x = self.tempMaxPoolingType(x)
+    #   x = self.classifier(x)
     return x
 
   def catType(self, x):
