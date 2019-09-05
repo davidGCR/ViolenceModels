@@ -81,6 +81,7 @@ class Trainer:
     def test_epoch(self, epoch):
         running_loss = 0.0
         running_corrects = 0
+        self.model.eval()
         
         # Iterate over data.
         for inputs, labels in self.dataloaders["val"]:

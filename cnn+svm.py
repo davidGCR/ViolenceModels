@@ -71,9 +71,9 @@ foldidx = 0
 best_acc_test = 0.0
 avgmaxDuration = 1.66
 
-modelType = "alexnetv2"
+modelType = "alexnetv1"
 interval_duration = 0.3
-numDiPerVideos = 8
+numDiPerVideos = 4
 dataset_source = "frames"
 debugg_mode = False
 num_workers = 6
@@ -134,13 +134,12 @@ for inputs, labels in dataloaders_dict["train"]:
   dataset_labels = labels
   # zero the parameter gradient
   optimizer.zero_grad()
-  # forward
-  # track history if only in train
-  with torch.set_grad_enabled(True):
+  with torch.set_grad_enabled(False):
     if joinType == 'cat':
-      outputs = model.getFeatureVectorCat(x)
+        outputs = model.getFeatureVectorCat(inputs)
     elif joinType == 'tempMaxPool':
         outputs = model.getFeatureVectorTempPool(inputs)
+    # outputs = model(inputs)
     outputs = outputs.cpu()
     lista.append(outputs.numpy())
 
@@ -199,7 +198,7 @@ print('labels shape:', type(dataset_labels), dataset_labels.shape)
 
 # # Grid Search
 # # Parameter Grid
-# param_grid = {'C': [0.1, 1, 10, 100]}
+# param_grid = {'C': [0.1, 1, 10, 100],'gamma': [1, 0.1, 0.01, 0.001, 0.00001, 10]}
 # # Make grid search classifier
 # clf_grid = GridSearchCV(svm.SVC(), param_grid, verbose=1)
 # # Train the classifier
@@ -209,7 +208,6 @@ print('labels shape:', type(dataset_labels), dataset_labels.shape)
 # print("Best Estimators:", clf_grid.best_estimator_)
 
 clf = svm.SVC(kernel='linear', C=1)
-# clf = svm.SVC(kernel='rbf', C = 10.0, gamma=0.1)
 scores = cross_val_score(clf, dataset, labels, cv=5)
 print(scores)
 print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
@@ -220,3 +218,11 @@ print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 #     shrinking=True, tol=0.001, verbose=False)
 # scores2 = cross_val_score(clf2, dataset, labels, cv=5)
 # print(scores2)
+
+# clf2 = svm.SVC(C=100, cache_size=200, class_weight=None, coef0=0.0,
+#     decision_function_shape='ovr', degree=3, gamma=1e-05, kernel='rbf',
+#     max_iter=-1, probability=False, random_state=None, shrinking=True,
+#     tol=0.001, verbose=False)
+# scores2 = cross_val_score(clf2, dataset, labels, cv=5)
+# print(scores2)
+# print("Accuracy: %0.2f (+/- %0.2f)" % (scores2.mean(), scores2.std() * 2))
