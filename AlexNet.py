@@ -4,6 +4,12 @@ from util import *
 from tempPooling import *
 import torch
 
+class Identity(nn.Module):
+  def __init__(self):
+      super().__init__()
+
+  def forward(self, x):
+      return x
 
 class ViolenceModelAlexNetV1(nn.Module): ##ViolenceModel
   def __init__(self, seqLen, joinType,feature_extract):
@@ -77,28 +83,35 @@ class ViolenceModelAlexNetV2(nn.Module): ##ViolenceModel2
       self.seqLen = seqLen
       self.joinType = joinType
       self.alexnet = models.alexnet(pretrained=True)
-      self.convNet = nn.Sequential(*list(self.alexnet.features.children()))
+      # self.convNet = nn.Sequential(*list(self.alexnet.features.children()))
       
-      self.avgpool = nn.AdaptiveAvgPool2d((6, 6))
-      self.classifier = nn.Sequential(
-          nn.Dropout(),
-          nn.Linear(256 * 6 * 6, 4096),
-          nn.ReLU(inplace=True),
-          nn.Dropout(),
-          nn.Linear(4096, 4096),
-          nn.ReLU(inplace=True),
-      )
-      self.feature_extract = feature_extract
+      # self.avgpool = nn.AdaptiveAvgPool2d((6, 6))
+      # self.classifier = nn.Sequential(
+      #     nn.Dropout(),
+      #     nn.Linear(256 * 6 * 6, 4096),
+      #     nn.ReLU(inplace=True),
+      #     nn.Dropout(),
+      #     nn.Linear(4096, 4096),
+      #     nn.ReLU(inplace=True),
+      # )
+      # self.feature_extract = feature_extract
       
+      self.alexnet.classifier = self.alexnet.classifier[:-1]
       set_parameter_requires_grad(self.alexnet, feature_extract)
-      set_parameter_requires_grad(self.avgpool, feature_extract)
-      set_parameter_requires_grad(self.classifier, feature_extract)
+      # set_parameter_requires_grad(self.avgpool, feature_extract)
+      # set_parameter_requires_grad(self.classifier, feature_extract)
       
       if self.joinType == 'cat':
         self.linear = nn.Linear(4096*seqLen,2)
       elif self.joinType == 'tempMaxPool':
         self.linear = nn.Linear(4096,2)
-      self.alexnet = None
+      # self.alexnet = None
+
+      # if self.joinType == 'cat':
+      #   self.alexnet.classifier[6] = nn.Linear(4096*seqLen,2)
+      # elif self.joinType == 'tempMaxPool':
+      #   self.alexnet.classifier[6] = nn.Linear(4096,2)
+      
   
   def forward(self, x):
     if self.joinType == 'cat':
@@ -112,14 +125,20 @@ class ViolenceModelAlexNetV2(nn.Module): ##ViolenceModel2
   def getFeatureVectorCat(self, x):
     lista = []
     for dimage in range(0, self.seqLen):
-      feature = self.convNet(x[dimage])
-      feature = self.avgpool(feature)
-      feature = torch.flatten(feature, 1)
-      feature = self.classifier(feature)
-      feature = feature.view(feature.size(0), 4096)
+      feature = self.alexnet(x[dimage])
       lista.append(feature)
     x = torch.cat(lista, dim=1)  
     return x
+    # lista = []
+    # for dimage in range(0, self.seqLen):
+    #   feature = self.convNet(x[dimage])
+    #   feature = self.avgpool(feature)
+    #   feature = torch.flatten(feature, 1)
+    #   feature = self.classifier(feature)
+    #   feature = feature.view(feature.size(0), 4096)
+    #   lista.append(feature)
+    # x = torch.cat(lista, dim=1)  
+    # return x
 
   def getFeatureVectorTempPool(self, x):
     lista = []
