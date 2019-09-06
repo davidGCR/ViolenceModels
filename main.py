@@ -75,7 +75,7 @@ best_acc_test = 0.0
 avgmaxDuration = 1.66
 
 
-modelType = "alexnetv1"
+modelType = "alexnetv2"
 interval_duration = 0.3
 numDiPerVideos = 4
 dataset_source = "frames"
