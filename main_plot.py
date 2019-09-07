@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 ###From Pickle
 # modelType = 'alexnetv2-frames-Finetuned:False-2-decay-'
 # path = '/media/david/datos/Violence DATA/violentflows/Results/frames/'
-modelType = 'alexnetv1-frames-Finetuned:False-3di-tempMaxPool-decay-'
+modelType = 'alexnetv2-frames-Finetuned:True-4di-cat-decay-'
 path = '/media/david/datos/Violence DATA/HockeyFights/Results/frames/'
 
 train_lost = loadList(path+modelType+'train_lost.txt')
