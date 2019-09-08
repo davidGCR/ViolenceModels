@@ -2,14 +2,8 @@ import torch.nn as nn
 from torchvision import models
 from util import *
 from tempPooling import *
+from Identity import *
 import torch
-
-class Identity(nn.Module):
-  def __init__(self):
-      super().__init__()
-
-  def forward(self, x):
-      return x
 
 class ViolenceModelAlexNetV1(nn.Module): ##ViolenceModel
   def __init__(self, seqLen, joinType,feature_extract):

@@ -119,6 +119,7 @@ dataloaders_dict = {
 
 model = None
 model, input_size = initialize_model(model_name = modelType, num_classes = 2, feature_extract=True, numDiPerVideos=numDiPerVideos, joinType = joinType ,use_pretrained=True)
+model.eval()
 model.to(device)
 params_to_update = verifiParametersToTrain(model)
 # Observe that all parameters are being optimized
