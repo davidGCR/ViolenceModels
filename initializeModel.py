@@ -29,10 +29,7 @@ def initialize_model(model_name, num_classes, feature_extract, numDiPerVideos, j
     elif model_name == "vgg":
         """ VGG11_bn
         """
-        model_ft = models.vgg11_bn(pretrained=use_pretrained)
-        set_parameter_requires_grad(model_ft, feature_extract)
-        num_ftrs = model_ft.classifier[6].in_features
-        model_ft.classifier[6] = nn.Linear(num_ftrs,num_classes)
+        model_ft = ViolenceModelVGG(numDiPerVideos, model_name, joinType, feature_extract)
         input_size = 224
 
     elif model_name == "squeezenet":
