@@ -75,16 +75,16 @@ best_acc_test = 0.0
 avgmaxDuration = 1.66
 
 
-modelType = "alexnetv2"
+modelType = "resnet34"
 interval_duration = 0.3
 numDiPerVideos = 4
 dataset_source = "frames"
 debugg_mode = False
 num_workers = 4
-batch_size = 64
+batch_size = 16
 num_epochs = 50
 feature_extract = False
-joinType = "cat"
+joinType = "tempMaxPool"
 # path_models = '/media/david/datos/Violence DATA/violentflows/Models/'
 # path_results = '/media/david/datos/Violence DATA/violentflows/Results/'+dataset_source
 # gpath = '/media/david/datos/Violence DATA/violentflows/movies Frames'

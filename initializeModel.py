@@ -23,15 +23,9 @@ def initialize_model(model_name, num_classes, feature_extract, numDiPerVideos, j
         # set_parameter_requires_grad(model_ft, feature_extract)
         input_size = 224
 
-    elif model_name == "resnet":
-        """ Resnet18
-        """
-        model_ft = ViolenceModelResNet(numDiPerVideos, feature_extract)
-        # set_parameter_requires_grad(model_ft, feature_extract)
-        # num_ftrs = model_ft.fc.in_features
-        # model_ft.fc = nn.Linear(num_ftrs, num_classes)
+    elif model_name == "resnet18" or model_name == "resnet34":
+        model_ft = ViolenceModelResNet(numDiPerVideos, model_name, joinType, feature_extract)
         input_size = 224
-
     elif model_name == "vgg":
         """ VGG11_bn
         """

@@ -6,11 +6,14 @@ from tempPooling import *
 import torch
 
 class ViolenceModelResNet(nn.Module):
-    def __init__(self, seqLen, joinType ,feature_extract):
+    def __init__(self, seqLen, model_name, joinType ,feature_extract):
         super(ViolenceModelResNet, self).__init__()
         self.seqLen = seqLen
-
-        self.model_ft = models.resnet18(pretrained=True)
+        self.joinType = joinType
+        if model_name == 'resnet18':
+            self.model_ft = models.resnet18(pretrained=True)
+        elif model_name == 'resnet34':
+            self.model_ft = models.resnet34(pretrained=True)
         self.num_ftrs = self.model_ft.fc.in_features
         self.model_ft.fc = Identity()
         self.convLayers = nn.Sequential(*list(self.model_ft.children())[:-2]) # to tempooling
@@ -20,7 +23,7 @@ class ViolenceModelResNet(nn.Module):
         if self.joinType == 'cat':
             self.linear = nn.Linear(self.num_ftrs*self.seqLen,2)
         elif self.joinType == 'tempMaxPool':
-            self.linear = nn.Linear(self.num_ftrs,2)
+            self.linear = nn.Linear(512*7*7,2)
 
         # self.conv1 = self.model_ft.conv1
         # self.bn1 = self.model_ft.bn1
@@ -49,10 +52,16 @@ class ViolenceModelResNet(nn.Module):
         # self.fc = nn.Linear(self.seqLen*self.num_ftrs, 2)
     
     def forward(self, x):
+        # print('forward input size:',x.size())
         if self.joinType == 'cat':
-            x = getFeatureVectorCat(x)
+            x = self.getFeatureVectorCat(x)
+            # print('cat input size:',x.size())
         elif self.joinType == 'tempMaxPool':
-
+            x = self.getFeatureVectorTempPool(x)
+            # print('tempPooling input size:',x.size())
+        # print('linear input size:',x.size())
+        x = self.linear(x)
+        return x
         # lista = []
         # for dimage in range(0, self.seqLen):
         #     feature = self.conv1(x[dimage])
@@ -73,7 +82,7 @@ class ViolenceModelResNet(nn.Module):
     def getFeatureVectorTempPool(self, x):
         lista = []
         for dimage in range(0, self.seqLen):
-            feature = self.convLayers(dimage)
+            feature = self.convLayers(x[dimage])
             lista.append(feature)
 
         minibatch = torch.stack(lista, 0)
@@ -93,6 +102,8 @@ class ViolenceModelResNet(nn.Module):
         lista = []
         for dimage in range(0, self.seqLen):
             feature = self.model_ft(x[dimage])
+            # feature = torch.flatten(feature, 1)
+            # feature = feature.view(feature.size(0), self.num_ftrs)
             lista.append(feature)
         x = torch.cat(lista, dim=1)
         return x
