@@ -5,8 +5,9 @@ import numpy as np
 import torchvision
 from torchvision import datasets, models, transforms
 from util import set_parameter_requires_grad
-from AlexNet import ViolenceModelAlexNetV1, ViolenceModelAlexNetV2
+from AlexNet import *
 from ResNet import *
+from Vgg import *
 
 def initialize_model(model_name, num_classes, feature_extract, numDiPerVideos, joinType, use_pretrained=True):
     # Initialize these variables which will be set in this if statement. Each of these
@@ -14,15 +15,10 @@ def initialize_model(model_name, num_classes, feature_extract, numDiPerVideos, j
     model_ft = None
     input_size = 0
 
-    if model_name == "alexnetv1":
-        model_ft = ViolenceModelAlexNetV1(numDiPerVideos, joinType, feature_extract)
+    if model_name == "alexnet":
+        model_ft = ViolenceModelAlexNet(numDiPerVideos, joinType, feature_extract)
         # set_parameter_requires_grad(model_ft, feature_extract)
         input_size = 224
-    elif model_name == "alexnetv2":
-        model_ft = ViolenceModelAlexNetV2(numDiPerVideos, joinType,feature_extract)
-        # set_parameter_requires_grad(model_ft, feature_extract)
-        input_size = 224
-
     elif model_name == "resnet18" or model_name == "resnet34":
         model_ft = ViolenceModelResNet(numDiPerVideos, model_name, joinType, feature_extract)
         input_size = 224

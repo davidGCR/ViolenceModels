@@ -7,7 +7,7 @@ import torch
 
 class ViolenceModelVGG(nn.Module):
     def __init__(self, seqLen, model_name, joinType ,feature_extract):
-        super(ViolenceModelResNet, self).__init__()
+        super(ViolenceModelVGG, self).__init__()
         self.seqLen = seqLen
         self.joinType = joinType
         

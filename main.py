@@ -75,16 +75,17 @@ best_acc_test = 0.0
 avgmaxDuration = 1.66
 
 
-modelType = "resnet34"
+modelType = 'alexnet'
 interval_duration = 0.3
-numDiPerVideos = 4
+numDiPerVideos = 1
 dataset_source = "frames"
 debugg_mode = False
 num_workers = 4
-batch_size = 16
+batch_size = 64
 num_epochs = 50
-feature_extract = False
+feature_extract = True
 joinType = "tempMaxPool"
+scheduler_type = "OnPlateau"
 # path_models = '/media/david/datos/Violence DATA/violentflows/Models/'
 # path_results = '/media/david/datos/Violence DATA/violentflows/Results/'+dataset_source
 # gpath = '/media/david/datos/Violence DATA/violentflows/movies Frames'
@@ -102,11 +103,23 @@ combined = list(zip(datasetAll, labelsAll, numFramesAll))
 random.shuffle(combined)
 datasetAll[:], labelsAll[:], numFramesAll[:] = zip(*combined)
 print(len(datasetAll), len(labelsAll), len(numFramesAll))
+print(
+    "Coinfiguration: ",
+    'modelType:',modelType,
+    'numDiPerVideos:',numDiPerVideos,
+    'dataset_source:',dataset_source,
+    'batch_size:',batch_size,
+    'num_epochs:',num_epochs,
+    'feature_extract:'.feature_extract,
+    'joinType:',joinType,
+    'scheduler_type: ',scheduler_type,
+)
 
 # for dataset_train, dataset_train_labels,dataset_test,dataset_test_labels   in k_folds_from_folders(gpath, 5):
-
+fold = 0
 for train_idx, test_idx in k_folds(n_splits=5, subjects=len(datasetAll)):
-
+    fold = fold + 1
+    print('**************** Fold: ',fold)
     dataset_train = list(itemgetter(*train_idx)(datasetAll))
     dataset_train_labels = list(itemgetter(*train_idx)(labelsAll))
 
@@ -168,10 +181,12 @@ for train_idx, test_idx in k_folds(n_splits=5, subjects=len(datasetAll)):
     optimizer = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
 
     # Decay LR by a factor of 0.1 every 7 epochs
-    # exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
-    exp_lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, patience=5, verbose=True
-    )
+    if scheduler_type == "StepLR":
+        exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+    elif scheduler_type == "OnPlateau":
+        exp_lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, patience=5, verbose=True
+        )
 
     ### trainer
     trainer = Trainer(
@@ -189,6 +204,8 @@ for train_idx, test_idx in k_folds(n_splits=5, subjects=len(datasetAll)):
         # Train and evaluate
         epoch_loss_train, epoch_acc_train = trainer.train_epoch(epoch)
         epoch_loss_test, epoch_acc_test = trainer.test_epoch(epoch)
+
+        exp_lr_scheduler.step(epoch_loss_test)
 
         train_lost.append(epoch_loss_train)
         train_acc.append(epoch_acc_train)
@@ -218,7 +235,8 @@ print("saving loss and acc history...")
 saveList(
     path_results,
     modelType,
-    "decay-train_lost",
+    scheduler_type,
+    "train_lost",
     numDiPerVideos,
     dataset_source,
     feature_extract,
@@ -228,7 +246,8 @@ saveList(
 saveList(
     path_results,
     modelType,
-    "decay-train_acc",
+    scheduler_type,
+    "train_acc",
     numDiPerVideos,
     dataset_source,
     feature_extract,
@@ -238,7 +257,8 @@ saveList(
 saveList(
     path_results,
     modelType,
-    "decay-test_lost",
+    scheduler_type,
+    "test_lost",
     numDiPerVideos,
     dataset_source,
     feature_extract,
@@ -248,7 +268,8 @@ saveList(
 saveList(
     path_results,
     modelType,
-    "decay-test_acc",
+    scheduler_type,
+    "test_acc",
     numDiPerVideos,
     dataset_source,
     feature_extract,

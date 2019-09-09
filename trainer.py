@@ -27,7 +27,7 @@ class Trainer:
         self.scheduler = scheduler
 
     def train_epoch(self, epoch):
-        self.scheduler.step(epoch)
+        # self.scheduler.step(epoch)
         self.model.train()  # Set model to training mode
         is_inception = False
         running_loss = 0.0
@@ -40,7 +40,6 @@ class Trainer:
             labels = labels.to(self.device)
             # zero the parameter gradients
             self.optimizer.zero_grad()
-            # forward
             # track history if only in train
             with torch.set_grad_enabled(True):
                 # Get model outputs and calculate loss
@@ -65,6 +64,7 @@ class Trainer:
 
                 loss.backward()
                 self.optimizer.step()
+                # self.scheduler.step(epoch)
 
             # statistics
             running_loss += loss.item() * inputs.size(0)
