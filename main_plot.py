@@ -1,6 +1,7 @@
 from plot import *
 import matplotlib.pyplot as plt
 import argparse
+from util import *
 
 ###From Pickle
 # modelType = 'alexnetv2-frames-Finetuned:False-2-decay-'
@@ -15,8 +16,14 @@ def plot_results(path, modelType,lastEpoch):
     test_acc = loadList(path+modelType+'test_acc.txt')
 
     num_epochs = int(len(train_lost)/5)
+    # num_epochs = 30
     print('len: ',len(train_lost))
     print('num_epochs size: ', num_epochs)
+
+    # saveList(path+modelType+'train_lost.txt',train_lost[0:150])
+    # saveList(path+modelType+'train_acc.txt',train_lost[150:300])
+    # saveList(path+modelType+'test_lost.txt',train_lost[150:300])
+    # saveList(path+modelType+'test_acc.txt',train_lost[150:300])
 
     fig2 = plt.figure(figsize=(12,12))
 
@@ -33,12 +40,7 @@ def plot_results(path, modelType,lastEpoch):
 
     plt.show()
 
-    # max_acc_train = []
-    # max_acc_test = []
-    # lastEpoch =num_epochs
-
     print('max test accuracy until ',lastEpoch,' epoch: ', np.amax(np.array(avgTestAcc[0:lastEpoch])))
-    # avgTestAcc[0:lastEpoch]
 
 def __main__():
     parser = argparse.ArgumentParser()

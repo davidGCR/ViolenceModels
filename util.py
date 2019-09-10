@@ -41,6 +41,12 @@ def saveList(path_out,model, otimizer_type,curve, numDI, source_type, feature_ex
     pickle.dump(lista, filehandle)
     print('saved ... ',data_file)
 
+def saveList2(path_out,lista):
+  data_file = path_out
+  with open(data_file, 'wb') as filehandle:
+      # store the data as binary data stream
+    pickle.dump(lista, filehandle)
+    print('saved ... ',data_file)
 
 def loadList(name):
   with open(name, 'rb') as filehandle:
