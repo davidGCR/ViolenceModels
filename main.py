@@ -285,7 +285,7 @@ def __main__():
     parser = argparse.ArgumentParser()
     parser.add_argument("--path_violence",type=str,default="/media/david/datos/Violence DATA/HockeyFights/frames/violence",help="Directory containing violence videos")
     parser.add_argument("--path_noviolence",type=str,default="/media/david/datos/Violence DATA/HockeyFights/frames/nonviolence",help="Directory containing non violence videos")
-    parser.add_argument("--path_results",type=str,default="/media/david/datos/Violence DATA/HockeyFights/Results/",help="Directory containing results")
+    parser.add_argument("--path_results",type=str,default="/media/david/datos/Violence DATA/HockeyFights/Results",help="Directory containing results")
     parser.add_argument("--modelType",type=str,default="alexnet",help="model")
     parser.add_argument("--num_epochs",type=int,default=30)
     parser.add_argument("--batch_size",type=int,default=64)
