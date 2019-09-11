@@ -234,7 +234,6 @@ def init(
             #         'optimizer_state_dict': optimizer.state_dict()
             #         }, filepath)
 
-            foldidx = foldidx + 1
 
         print("saving loss and acc history...")
         saveList(
