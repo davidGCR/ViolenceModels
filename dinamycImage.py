@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image
 
+
 # class DinamycImage():
 #     def __init__(self,):
 
@@ -19,5 +20,6 @@ def getDynamicImage(frames):
     sm = 255 * sm /np.max(sm) 
     img = sm.astype(np.uint8)
     ##to PIL image
-    img = Image.fromarray(np.uint8(img))
-    return img
+    imgPIL = Image.fromarray(np.uint8(img))
+    return imgPIL, img
+

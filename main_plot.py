@@ -2,6 +2,7 @@ from plot import *
 import matplotlib.pyplot as plt
 import argparse
 from util import *
+import os
 
 ###From Pickle
 # modelType = 'alexnetv2-frames-Finetuned:False-2-decay-'
@@ -9,11 +10,12 @@ from util import *
 # modelType = 'alexnetv2-frames-Finetuned:False-5-decay-'
 # path = '/media/david/datos/Violence DATA/HockeyFights/Results/frames/'
 
-def plot_results(path, modelType,lastEpoch):
-    train_lost = loadList(path+modelType+'train_lost.txt')
-    train_acc = loadList(path+modelType+'train_acc.txt')
-    test_lost = loadList(path+modelType+'test_lost.txt')
-    test_acc = loadList(path+modelType+'test_acc.txt')
+def plot_results(path, modelType, lastEpoch):
+    path = os.path.join(path,modelType)
+    train_lost = loadList(str(path)+'train_lost.txt')
+    train_acc = loadList(str(path)+'train_acc.txt')
+    test_lost = loadList(str(path)+'test_lost.txt')
+    test_acc = loadList(str(path)+'test_acc.txt')
 
     num_epochs = int(len(train_lost)/5)
     # num_epochs = 30
@@ -35,8 +37,9 @@ def plot_results(path, modelType,lastEpoch):
     avgTestAcc = getAverageFromFolds(test_acc,num_epochs)
     avgTestLost = getAverageFromFolds(test_lost, num_epochs)
 
-    plotScalarCombined(avgTrainLost,avgTestLost, num_epochs,'Error Promedio','Error',fig2,3,2,5)
-    plotScalarCombined(avgTrainAcc, avgTestAcc, num_epochs, 'Tasa de Acierto Promedio', 'Tasa de Acierto',fig2,3,2,6)
+    
+    plotScalarCombined(avgTrainAcc, avgTestAcc, num_epochs, 'Tasa de Acierto Promedio', 'Tasa de Acierto',fig2,3,2,5)
+    plotScalarCombined(avgTrainLost,avgTestLost, num_epochs,'Error Promedio','Error',fig2,3,2,6)
 
     plt.show()
 
@@ -44,7 +47,7 @@ def plot_results(path, modelType,lastEpoch):
 
 def __main__():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--resultsDir', type=str, default='/media/david/datos/Violence DATA/HockeyFights/Results/frames/', help='Directory containing results')
+    parser.add_argument('--resultsDir', type=str, default='/media/david/datos/Violence DATA/HockeyFights/Results', help='Directory containing results')
     parser.add_argument('--modelType', type=str, help='model name')
     parser.add_argument('--lastEpoch', type=int, default=100, help='last epoch before overfiting')
     args = parser.parse_args()

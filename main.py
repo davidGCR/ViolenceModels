@@ -35,35 +35,9 @@ import random
 from initializeModel import *
 from util import *
 from verifyParameters import *
-
-# Detect if we have a GPU available
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-# Setup the loss fxn
-criterion = nn.CrossEntropyLoss()
+from transforms import *
 
 
-def createTransforms(input_size):
-    # Data augmentation and normalization for training
-    # Just normalization for validation
-    data_transforms = {
-        "train": transforms.Compose(
-            [
-                transforms.RandomResizedCrop(input_size),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-            ]
-        ),
-        "val": transforms.Compose(
-            [
-                transforms.Resize(input_size),
-                transforms.CenterCrop(input_size),
-                transforms.ToTensor(),
-                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-            ]
-        ),
-    }
-    return data_transforms
 
 
 def init(
@@ -82,6 +56,8 @@ def init(
     feature_extract,
     joinType,
     scheduler_type,
+    device,
+    criterion,
     debugg_mode = False
 ):
     for numDiPerVideos in ndis:
@@ -118,7 +94,7 @@ def init(
             scheduler_type,
         )
 
-        # for dataset_train, dataset_train_labels,dataset_test,dataset_test_labels   in k_folds_from_folders(gpath, 5):
+        # for dataset_train, dataset_train_labels,dataset_test,dataset_test_labels   in `k_folds_from_folders`(gpath, 5):
         fold = 0
         for train_idx, test_idx in k_folds(n_splits=5, subjects=len(datasetAll)):
             fold = fold + 1
@@ -331,11 +307,15 @@ def __main__():
     input_size = 224
 
     transforms = createTransforms(input_size)
+    # Detect if we have a GPU available
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    # Setup the loss fxn
+    criterion = nn.CrossEntropyLoss()
     # path_models = '/media/david/datos/Violence DATA/violentflows/Models/'
     # path_results = '/media/david/datos/Violence DATA/violentflows/Results/'+dataset_source
     # gpath = '/media/david/datos/Violence DATA/violentflows/movies Frames'
     init(path_violence, path_noviolence, path_results, modelType, ndis, num_workers, transforms,
-            dataset_source, interval_duration, avgmaxDuration, batch_size, num_epochs,feature_extract, joinType, scheduler_type, debugg_mode)
+            dataset_source, interval_duration, avgmaxDuration, batch_size, num_epochs,feature_extract, joinType, scheduler_type, device, criterion, debugg_mode)
 
 __main__()
 

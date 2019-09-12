@@ -101,8 +101,8 @@ class ViolenceDatasetVideos(Dataset):
             ## the last chunk
             if numberFramesInterval - len(frames) < self.diference_max: 
                 # print('ading the last ----------: ')
-                img = getDynamicImage(frames)
-                dinamycImages.append(self.spatial_transform(img.convert("RGB")))  ##add dynamic image
+                imgPIL, img = getDynamicImage(frames)
+                dinamycImages.append(self.spatial_transform(imgPIL.convert("RGB")))  ##add dynamic image
             
             if len(dinamycImages) > self.nDynamicImages:
                 n = len(dinamycImages) - self.nDynamicImages
@@ -134,9 +134,9 @@ class ViolenceDatasetVideos(Dataset):
                         frames.append(img)
                     if self.debugg_mode:
                         print('->total frames for Di: ', len(frames))
-                    img = getDynamicImage(frames)
+                    imgPIL, img = getDynamicImage(frames)
 
-                    dinamycImages.append(self.spatial_transform(img.convert("RGB")))
+                    dinamycImages.append(self.spatial_transform(imgPIL.convert("RGB")))
 
         if self.debugg_mode:
             print('total DyImags: ', len(dinamycImages))

@@ -34,13 +34,20 @@ def set_parameter_requires_grad(model, feature_extracting):
 
 
 
-def saveList(path_out,model, otimizer_type,curve, numDI, source_type, feature_extract, joinType,lista):
-  data_file = path_out+'/'+str(model)+'-'+source_type+'-Finetuned:'+str(not feature_extract)+'-'+str(numDI)+'di-'+joinType+'-'+otimizer_type+'-'+str(curve)+'.txt'
+def saveList(path_out,model, scheduler_type,curve, numDI, source_type, feature_extract, joinType,lista):
+  data_file = path_out+'/'+str(model)+'-'+source_type+'-Finetuned:'+str(not feature_extract)+'-'+str(numDI)+'di-'+joinType+'-'+scheduler_type+'-'+str(curve)+'.txt'
   with open(data_file, 'wb') as filehandle:
       # store the data as binary data stream
     pickle.dump(lista, filehandle)
     print('saved ... ',data_file)
 
+def saveData(path_out,model,curve, numDI, source_type, feature_extract, joinType,lista):
+  data_file = path_out+'/'+str(model)+'-'+source_type+'-Finetuned:'+str(not feature_extract)+'-'+str(numDI)+'di-'+joinType+'-'+str(curve)+'.txt'
+  with open(data_file, 'wb') as filehandle:
+      # store the data as binary data stream
+    pickle.dump(lista, filehandle)
+    print('saved ... ', data_file)
+    
 def saveList2(path_out,lista):
   data_file = path_out
   with open(data_file, 'wb') as filehandle:
@@ -54,7 +61,7 @@ def loadList(name):
     hist2 = pickle.load(filehandle)
     return hist2
 
-def loadArray(path_out, model, curve, numDI, source_type, feature_extract, joinType):
+def loadArray(path_out, model,curve, numDI, source_type, feature_extract, joinType):
   data_file = path_out+'/'+str(model)+'-'+source_type+'-Finetuned:'+str(not feature_extract)+'-'+str(numDI)+'di-'+joinType+'-'+str(curve)+'.txt'
   with open(data_file, 'rb') as filehandle:
     # read the data as binary data stream
