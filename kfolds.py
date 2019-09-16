@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import torch
 
 def partitions(number, k):
     """
@@ -42,11 +43,26 @@ def k_folds(n_splits, subjects):
         subjects: number of patients
         frames: length of the sequence of each patient
     """
-    # indices = np.arange(subjects * frames).astype(int)
     indices = np.arange(subjects).astype(int)
-    for test_idx in get_indices(n_splits, subjects):
-        train_idx = np.setdiff1d(indices, test_idx)
-        yield train_idx, test_idx
+    if n_splits == 1:
+        for i in range(1):
+            train, test = train_test_split(80, 20, subjects)
+            yield train, test
+    # indices = np.arange(subjects * frames).astype(int)
+    else: 
+        for test_idx in get_indices(n_splits, subjects):
+            train_idx = np.setdiff1d(indices, test_idx)
+            yield train_idx, test_idx
+
+def train_test_split(s1, s2, len_indices):
+    indices = np.arange(len_indices).astype(int)
+    train_size = int((s1/100) * len_indices)
+    # test_size = dataset_len - train_size
+    # train_dataset, test_dataset = torch.utils.data.random_split(fulldataset, [train_size, test_size])
+    train_dataset = indices[0:train_size]
+    test_dataset = indices[train_size:len_indices]
+
+    return train_dataset, test_dataset
 
 
 def build_paths(gpath, list_paths):

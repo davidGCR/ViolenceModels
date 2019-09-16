@@ -1,9 +1,13 @@
 import pickle
 import os
 import glob
-import cv2
+# import cv2
 import numpy as np
+import torch
 
+def save_checkpoint(state, path):
+  print('saving checkpoint ...')
+  torch.save(state, path+'.tar')
 
 def createDataset(path_violence, path_noviolence):
     imagesF = []

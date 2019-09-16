@@ -3,13 +3,14 @@ import torchvision
 # from tensorboardcolab import TensorBoardColab
 import time
 import copy
+from util import save_checkpoint
 
 
 class Trainer:
-    def __init__(self, model, dataloaders, criterion, optimizer, scheduler,device, num_epochs):
+    def __init__(self, model, dataloaders, criterion, optimizer, scheduler,device, num_epochs, checkpoint_path):
         self.model = model
         # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet, inception]
-        self.model_name = "alexnet"
+        # self.model_name = "alexnet"
         # Number of classes in the dataset
         self.num_classes = 2
         
@@ -25,6 +26,9 @@ class Trainer:
         self.device = device
         self.num_epochs = num_epochs
         self.scheduler = scheduler
+        self.checkpoint_path = checkpoint_path
+        self.best_model_wts = copy.deepcopy(model.state_dict())
+        self.best_acc = 0.0
 
     def train_epoch(self, epoch):
         # self.scheduler.step(epoch)
@@ -47,7 +51,6 @@ class Trainer:
                 #   mode we calculate the loss by summing the final output and the auxiliary output
                 #   but in testing we only consider the final output.
                 if is_inception:
-                    # From https://discuss.pytorch.org/t/how-to-optimize-inception-model-with-auxiliary-classifiers/7958
                     outputs, aux_outputs = self.model(inputs)
                     loss1 = self.criterion(outputs, labels)
                     loss2 = self.criterion(aux_outputs, labels)
@@ -108,6 +111,10 @@ class Trainer:
         epoch_acc = running_corrects.double() / len(self.dataloaders["val"].dataset)
 
         print("{} Loss: {:.4f} Acc: {:.4f}".format("test", epoch_loss, epoch_acc))
+        if self.checkpoint_path != None and epoch_acc > self.best_acc:
+            self.best_acc = epoch_acc
+            self.best_model_wts = copy.deepcopy(self.model.state_dict())
+            save_checkpoint(self.model, self.checkpoint_path)
         # self.tb.save_value("testLoss", "test_loss", epoch, epoch_loss)
         # self.tb.save_value("testAcc", "test_acc", epoch, epoch_acc)
 

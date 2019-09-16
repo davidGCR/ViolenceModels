@@ -18,8 +18,10 @@ class ViolenceModelVGG(nn.Module):
 
         set_parameter_requires_grad(self.model_ft, feature_extract)
         if self.joinType == 'cat':
+            self.model_ft.classifier[3] = nn.Linear(4096,2048)
             self.model_ft.classifier = self.model_ft.classifier[:-1]
-            self.linear = nn.Linear(self.num_ftrs*self.seqLen,2)
+            # self.linear = nn.Linear(self.num_ftrs*self.seqLen,2)
+            self.linear = nn.Linear(2048*self.seqLen,2)
         elif self.joinType == 'tempMaxPool':
             self.model_ft = nn.Sequential(*list(self.model_ft.children())[:-2]) #remove fc layers
             self.linear = nn.Linear(512*7*7,2)
