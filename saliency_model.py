@@ -109,9 +109,9 @@ class SaliencyModel(nn.Module):
 
     
     def forward(self, x, labels):
-        print('forward input:',x.size())
+        # print('forward input:',x.size())
         out = F.relu(self.bn1(self.conv1(x)))
-        print('out input:', out.size())
+        # print('out input:', out.size())
         
         scale1 = self.layer1(out)
         scale2 = self.layer2(scale1)
@@ -122,21 +122,21 @@ class SaliencyModel(nn.Module):
         act = torch.sum(scale4*em.view(-1, 512, 1, 1), 1, keepdim=True)
         th = torch.sigmoid(act)
         scale4 = scale4*th
-        print('scale4 input:', scale4.size())
+        # print('scale4 input:', scale4.size())
         
         upsample3 = self.uplayer4(scale4,scale3)
         upsample2 = self.uplayer3(upsample3,scale2)
         upsample1 = self.uplayer2(upsample2,scale1)
-        print('upsample1 input:', upsample1.size())
+        # print('upsample1 input:', upsample1.size())
 
         saliency_chans = self.saliency_chans(upsample1)
         
         
         out = F.avg_pool2d(scale4, 4)
         out = out.view(out.size(0), -1)
-        print('out input:', out.size())
+        # print('out input:', out.size())
         out = self.linear(out)
-        print('out linear input:', out.size())
+        # print('out linear input:', out.size())
         
         a = torch.abs(saliency_chans[:,0,:,:])
         b = torch.abs(saliency_chans[:,1,:,:])

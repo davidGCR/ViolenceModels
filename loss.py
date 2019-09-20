@@ -58,13 +58,18 @@ class Loss:
         return (x_loss + y_loss + border) / float(power * masks.size(0))  # watch out, normalised by the batch size!
   
     def destroyer_loss(self,images,masks,targets,black_box_func):
-        destroyed_images = self.apply_mask(images,1 - masks)
+        destroyed_images = self.apply_mask(images, 1 - masks)
+        destroyed_images = torch.unsqueeze(destroyed_images, 0)
+        destroyed_images = destroyed_images.permute(1, 0, 2, 3, 4)
+        # print('destroyer loss mask: ', destroyed_images.size())
         out = black_box_func(destroyed_images)
         
         return self.cw_loss(out, targets, targeted=False, t_conf=1., nt_conf=5)
   
     def preserver_loss(self,images,masks,targets,black_box_func):
-        preserved_images = self.apply_mask(images,masks)
+        preserved_images = self.apply_mask(images, masks)
+        preserved_images = torch.unsqueeze(preserved_images,0)
+        preserved_images = preserved_images.permute(1, 0, 2, 3, 4)
         out = black_box_func(preserved_images)
         
         return self.cw_loss(out, targets, targeted=True, t_conf=1., nt_conf=1)

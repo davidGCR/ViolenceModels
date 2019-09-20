@@ -85,30 +85,27 @@ dataloaders_dict = {
 }
 
 def train():
-    
     # trainloader,testloader,classes = cifar10()
     net = saliency_model(num_classes=num_classes)
     net = net.cuda()
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(net.parameters())
-
     # black_box_func = resnet(pretrained=True)
     black_box_func = torch.load('/media/david/datos/Violence DATA/HockeyFights/checkpoints/resnet18-frames-Finetuned:False-3di-tempMaxPool-OnPlateau.tar')
-    
     black_box_func = black_box_func.cuda()
     loss_func = Loss(num_classes=num_classes)
 
     for epoch in range(num_epochs):  # loop over the dataset multiple times
-        
         running_loss = 0.0
         running_corrects = 0.0
         
         for i, data in tqdm(enumerate(dataloaders_dict['train'], 0)):
             # get the inputs
-            inputs_r, labels = data
+            inputs_r, labels = data #dataset load [bs,ndi,c,w,h]
+            # print('dataset element: ',inputs_r.shape)
             inputs_r = inputs_r.permute(1, 0, 2, 3, 4)
-            inputs = torch.squeeze(inputs_r, 0)
-            print('inputs shape:',inputs.shape)
+            inputs = torch.squeeze(inputs_r, 0) #get one di [bs,c,w,h]
+            # print('inputs shape:',inputs.shape)
             # wrap them in Variable
             inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
 
@@ -116,10 +113,12 @@ def train():
             optimizer.zero_grad()
 
             mask, out = net(inputs, labels)
-            print('mask shape:',mask.shape)
+            # print('mask shape:', mask.shape)
+            # print('inputs shape:',inputs.shape)
+            # print('labels shape:',labels.shape)
 
-            inputs_r = Variable(inputs_r.cuda())
-            loss = loss_func.get(mask,inputs_r,labels,black_box_func)
+            # inputs_r = Variable(inputs_r.cuda())
+            loss = loss_func.get(mask,inputs,labels,black_box_func)
             # running_loss += loss.data[0]
             running_loss += loss.item()
 
