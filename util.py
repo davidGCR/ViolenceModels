@@ -9,6 +9,18 @@ def save_checkpoint(state, path):
   print('saving checkpoint ...')
   torch.save(state, path+'.tar')
 
+def getViolenceData(path):
+  imagesF = []
+  list_violence = os.listdir(path)
+  list_violence.sort(key=lambda f: int("".join(filter(str.isdigit, f))))
+  for target in list_violence:
+      d = os.path.join(path, target)
+      imagesF.append(d)
+  labels = list([1] * len(imagesF))
+  numFrames = [len(glob.glob1(imagesF[i], "*.jpg")) for i in range(len(imagesF))]
+  return imagesF, labels, numFrames
+
+  
 def createDataset(path_violence, path_noviolence):
     imagesF = []
 
