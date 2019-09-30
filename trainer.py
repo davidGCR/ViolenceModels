@@ -38,7 +38,7 @@ class Trainer:
         running_corrects = 0
         # Iterate over data.
         for inputs, labels in self.dataloaders["train"]:
-            # print('==== dataloader size: ',inputs.size())
+            # print('==== dataloader size: ',inputs.size()) #[batch, ndi, ch, h, w]
             inputs = inputs.permute(1, 0, 2, 3, 4)
             inputs = inputs.to(self.device)
             labels = labels.to(self.device)

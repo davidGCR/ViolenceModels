@@ -44,7 +44,8 @@ class ViolenceModelAlexNet(nn.Module): ##ViolenceModel2
 
   def getFeatureVectorTempPool(self, x):
     lista = []
-    for dimage in range(0, self.seqLen):
+    seqLen = len(x)
+    for dimage in range(0, seqLen):
       feature = self.model(x[dimage])
       lista.append(feature)
     minibatch = torch.stack(lista, 0)

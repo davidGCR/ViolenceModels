@@ -20,7 +20,7 @@ def initialize_model(model_name, num_classes, feature_extract, numDiPerVideos, j
         # set_parameter_requires_grad(model_ft, feature_extract)
         input_size = 224
     elif model_name == "resnet18" or model_name == "resnet34":
-        model_ft = ViolenceModelResNet(numDiPerVideos, model_name, joinType, feature_extract)
+        model_ft = ViolenceModelResNet(num_classes, numDiPerVideos, model_name, joinType, feature_extract)
         input_size = 224
     elif model_name == "vgg":
         """ VGG11_bn
