@@ -3,11 +3,21 @@ sys.path.insert(1, '/media/david/datos/PAPERS-SOURCE_CODE/MyCode')
 from dataset import *
 import os
 import re
-from util import video2Images2
+from util import video2Images2, saveList
 import csv
 import pandas as pd
 import numpy as np
 import cv2
+from ViolenceDatasetV2 import ViolenceDatasetVideos
+from transforms import createTransforms
+import torch.nn as nn
+import torch
+from initializeModel import initialize_model
+from verifyParameters import verifiParametersToTrain
+import torch.optim as optim
+from torch.optim import lr_scheduler
+from trainer import Trainer
+import random
 
 def extractMetadata(path='/media/david/datos/Violence DATA/AnomalyCRIME/UCFCrime2Local/videos'):
     paths = os.listdir(path)
@@ -89,35 +99,123 @@ def createAnomalyDataset(path_frames):
     for name in names:
         d = os.path.join(path_frames, name)
         Dataset.append(d)
-    
-    # print('Dataset: ',Dataset)
-    # imagesNoF = []
-    # list_no_violence = os.listdir(path_noviolence)
-    # list_no_violence.sort(key=lambda f: int("".join(filter(str.isdigit, f))))
-
-    # for target in list_no_violence:
-    #     d = os.path.join(path_noviolence, target)
-    #     imagesNoF.append(d)
-
-    # Dataset = imagesF + imagesNoF
-    # Labels = list([1] * len(imagesF)) + list([0] * len(imagesNoF))
     NumFrames = [len(glob.glob1(os.path.join(path_frames, names[i]), "*.jpg")) for i in range(len(Dataset))]
     return Dataset, labels_int, NumFrames
+
+def train_test_videos(train_file, test_file, g_path):
+    train_names = []
+    train_labels = []
+    test_names = []
+    test_labes = []
+    classes = {'Normal_Videos': 0, 'Arrest': 1, 'Assault': 2, 'Burglary': 3, 'Robbery': 4, 'Stealing': 5, 'Vandalism': 6}
+    with open(train_file, 'r') as file:
+        for row in file:
+            train_names.append(os.path.join(g_path,row[:-1]))
+            train_labels.append(row[:-4])
+
+    with open(test_file, 'r') as file:
+        for row in file:
+            test_names.append(os.path.join(g_path,row[:-1]))
+            test_labes.append(row[:-4])
+    
+    train_labels = [classes[label] for label in train_labels]
+    test_labes = [classes[label] for label in test_labes]
+
+    return train_names, train_labels, test_names, test_labes
 
 def __main__():
     # Dataset, Labels, NumFrames =
     # videos2frames('/media/david/datos/Violence DATA/AnomalyCRIME/UCFCrime2Local/videos', '/media/david/datos/Violence DATA/AnomalyCRIME/UCFCrime2Local/frames')
-    names, labels, paths = extractMetadata('/media/david/datos/Violence DATA/AnomalyCRIME/UCFCrime2Local/videos')
+    # names, labels, paths = extractMetadata('/media/david/datos/Violence DATA/AnomalyCRIME/UCFCrime2Local/videos')
     # print('names: ', names)
     # print('labels: ', labels)
     # print('paths: ',paths)
-    Dataset, Labels, NumFrames = createAnomalyDataset('/media/david/datos/Violence DATA/AnomalyCRIME/UCFCrime2Local/frames')
-    print('Dataset: ', Dataset)
-    print('Labels: ', Labels)
-    print('NumFrames: ',NumFrames)
     # cutVideo('/media/david/datos/Violence DATA/AnomalyCRIME/Temporal_Anomaly_Annotation_for_Testing_Videos.txt')
     # dataset_path = '/media/david/datos/Violence DATA/AnomalyCRIME/UCFCrime2Local'
     # video_name = 'Stealing009'
     # plotBoundingBox(os.path.join(dataset_path,'videos/'+video_name+'_x264.mp4'),os.path.join(dataset_path,'readme/Txt annotations/'+video_name +'.txt'))
+    # print('Dataset: ', Dataset)
+    # print('Labels: ', Labels)
+    # print('NumFrames: ', NumFrames)
+
+    dataset_path = '/media/david/datos/Violence DATA/AnomalyCRIME/UCFCrime2Local'
+    train_videos_path = os.path.join(dataset_path, 'readme', 'Train_split_AD.txt')
+    test_videos_path = os.path.join(dataset_path, 'readme', 'Test_split_AD.txt')
+    path_dataset_frames = os.path.join(dataset_path,'frames')
+    train_names, train_labels, test_names, test_labels = train_test_videos(train_videos_path, test_videos_path, path_dataset_frames)
+    
+    combined = list(zip(train_names, train_labels))
+    random.shuffle(combined)
+    train_names[:], train_labels[:] = zip(*combined)
+
+    combined = list(zip(test_names, test_labels))
+    random.shuffle(combined)
+    test_names[:], test_labels[:] = zip(*combined)
+
+    # print(train_names)
+    # print(train_labels)
+    # print(len(datasetAll), len(labelsAll), len(numFramesAll))
+
+    input_size = 224
+    dataset_source = "frames"
+    transforms = createTransforms(input_size)
+    numDiPerVideos = 2
+    debugg_mode = False
+    avgmaxDuration = 1.66
+    interval_duration = 0.3
+    num_workers = 4
+    batch_size = 8
+    num_classes = 7
+    modelType = 'alexnet'
+    feature_extract = True
+    joinType = 'tempMaxPool'
+    num_epochs = 16
+    path_results = os.path.join(dataset_path,'plot_data')
+    
+    image_datasets = {
+        "train": ViolenceDatasetVideos( dataset=train_names, labels=train_labels, spatial_transform=transforms["train"], source=dataset_source,
+            interval_duration=interval_duration, difference=3, maxDuration=avgmaxDuration, nDynamicImages=numDiPerVideos, debugg_mode=debugg_mode, ),
+        "test": ViolenceDatasetVideos( dataset=test_names, labels=test_labels, spatial_transform=transforms["test"], source=dataset_source,
+            interval_duration=interval_duration, difference=3, maxDuration=avgmaxDuration, nDynamicImages=numDiPerVideos, debugg_mode=debugg_mode, )
+    }
+    dataloaders_dict = {
+        "train": torch.utils.data.DataLoader( image_datasets["train"], batch_size=batch_size, shuffle=True, num_workers=num_workers, ),
+        "test": torch.utils.data.DataLoader( image_datasets["test"], batch_size=batch_size, shuffle=True, num_workers=num_workers, ),
+    }
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    model, input_size = initialize_model( model_name=modelType, num_classes=num_classes, feature_extract=feature_extract, numDiPerVideos=numDiPerVideos, joinType=joinType, use_pretrained=True)
+    model.to(device)
+    params_to_update = verifiParametersToTrain(model)
+    print(model)
+
+    optimizer = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
+    # Decay LR by a factor of 0.1 every 7 epochs
+    # if scheduler_type == "StepLR":
+    exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+    # elif scheduler_type == "OnPlateau":
+    #     exp_lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau( optimizer, patience=5, verbose=True )
+    criterion = nn.CrossEntropyLoss()
+    trainer = Trainer(model, dataloaders_dict, criterion, optimizer, exp_lr_scheduler, device, num_epochs, checkpoint_path=os.path.join(dataset_path,'checkpoints'))
+    train_lost = []
+    train_acc = []
+    test_lost = []
+    test_acc = []
+    for epoch in range(1, num_epochs + 1):
+        print("----- Epoch {}/{}".format(epoch, num_epochs))
+        # Train and evaluate
+        epoch_loss_train, epoch_acc_train = trainer.train_epoch(epoch)
+        epoch_loss_test, epoch_acc_test = trainer.test_epoch(epoch)
+        exp_lr_scheduler.step(epoch_loss_test)
+        train_lost.append(epoch_loss_train)
+        train_acc.append(epoch_acc_train)
+        test_lost.append(epoch_loss_test)
+        test_acc.append(epoch_acc_test)
+    
+    print("saving loss and acc history...")
+    saveList(path_results, modelType, "StepLR", "train_lost", numDiPerVideos, dataset_source, feature_extract, joinType, train_lost,)
+    saveList(path_results, modelType, "StepLR","train_acc",numDiPerVideos, dataset_source, feature_extract, joinType, train_acc, )
+    saveList( path_results, modelType, "StepLR", "test_lost", numDiPerVideos, dataset_source, feature_extract, joinType, test_lost, )
+    saveList( path_results, modelType, "StepLR", "test_acc", numDiPerVideos, dataset_source, feature_extract, joinType, test_acc, )
 
 __main__()

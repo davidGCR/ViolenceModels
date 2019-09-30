@@ -7,21 +7,22 @@ import torch
 
 
 class ViolenceModelAlexNet(nn.Module): ##ViolenceModel2
-  def __init__(self, seqLen, joinType, feature_extract= True):
+  def __init__(self, num_classes, seqLen, joinType, feature_extract= True):
       super(ViolenceModelAlexNet, self).__init__()
       self.seqLen = seqLen
       self.joinType = joinType
+      self.num_classes = num_classes
       self.model = models.alexnet(pretrained=True)
       set_parameter_requires_grad(self.model, feature_extract)
       
       if self.joinType == 'cat':
         self.num_ftrs = self.model.classifier[6].in_features
         self.model.classifier = self.model.classifier[:-1]
-        self.linear = nn.Linear(self.num_ftrs*seqLen,2)
+        self.linear = nn.Linear(self.num_ftrs*seqLen,self.num_classes)
       elif self.joinType == 'tempMaxPool':
         self.model = nn.Sequential(*list(self.model.children())[:-2]) # to tempooling
         # self.linear = nn.Linear(4096,2)
-        self.linear = nn.Linear(256*6*6,2)
+        self.linear = nn.Linear(256*6*6,self.num_classes)
       
   
   def forward(self, x):

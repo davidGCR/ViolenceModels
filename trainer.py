@@ -7,7 +7,7 @@ from util import save_checkpoint
 
 
 class Trainer:
-    def __init__(self, model, dataloaders, criterion, optimizer, scheduler,device, num_epochs, checkpoint_path):
+    def __init__(self, model, dataloaders, criterion, optimizer, scheduler, device, num_epochs, checkpoint_path=''):
         self.model = model
         # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet, inception]
         # self.model_name = "alexnet"
@@ -33,7 +33,7 @@ class Trainer:
     def train_epoch(self, epoch):
         # self.scheduler.step(epoch)
         self.model.train()  # Set model to training mode
-        is_inception = False
+        # is_inception = False
         running_loss = 0.0
         running_corrects = 0
         # Iterate over data.
@@ -50,17 +50,17 @@ class Trainer:
                 # Special case for inception because in training it has an auxiliary output. In train
                 #   mode we calculate the loss by summing the final output and the auxiliary output
                 #   but in testing we only consider the final output.
-                if is_inception:
-                    outputs, aux_outputs = self.model(inputs)
-                    loss1 = self.criterion(outputs, labels)
-                    loss2 = self.criterion(aux_outputs, labels)
-                    loss = loss1 + 0.4 * loss2
-                else:
+                # if is_inception:
+                #     outputs, aux_outputs = self.model(inputs)
+                #     loss1 = self.criterion(outputs, labels)
+                #     loss2 = self.criterion(aux_outputs, labels)
+                #     loss = loss1 + 0.4 * loss2
+                # else:
                     
-                    outputs = self.model(inputs)
-                    # print('-- outputs size: ', outputs.size())
-                    # print('-- labels size: ',labels.size())
-                    loss = self.criterion(outputs, labels)
+                outputs = self.model(inputs)
+                # print('-- outputs size: ', outputs.size())
+                # print('-- labels size: ',labels.size())
+                loss = self.criterion(outputs, labels)
 
                 _, preds = torch.max(outputs, 1)
                 # backward + optimize only if in training phase
@@ -87,7 +87,7 @@ class Trainer:
         self.model.eval()
         
         # Iterate over data.
-        for inputs, labels in self.dataloaders["val"]:
+        for inputs, labels in self.dataloaders["test"]:
             inputs = inputs.permute(1, 0, 2, 3, 4)
             inputs = inputs.to(self.device)
             labels = labels.to(self.device)
@@ -107,8 +107,8 @@ class Trainer:
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
 
-        epoch_loss = running_loss / len(self.dataloaders["val"].dataset)
-        epoch_acc = running_corrects.double() / len(self.dataloaders["val"].dataset)
+        epoch_loss = running_loss / len(self.dataloaders["test"].dataset)
+        epoch_acc = running_corrects.double() / len(self.dataloaders["test"].dataset)
 
         print("{} Loss: {:.4f} Acc: {:.4f}".format("test", epoch_loss, epoch_acc))
         if self.checkpoint_path != None and epoch_acc > self.best_acc:
