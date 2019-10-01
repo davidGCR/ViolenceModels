@@ -3,7 +3,7 @@ sys.path.insert(1, '/media/david/datos/PAPERS-SOURCE_CODE/MyCode')
 from dataset import *
 import os
 import re
-from util import video2Images2, saveList
+from util import video2Images2, saveList, get_model_name
 import csv
 import pandas as pd
 import numpy as np
@@ -101,7 +101,7 @@ def createAnomalyDataset(path_frames):
         Dataset.append(d)
     NumFrames = [len(glob.glob1(os.path.join(path_frames, names[i]), "*.jpg")) for i in range(len(Dataset))]
     return Dataset, labels_int, NumFrames
-
+        
 def train_test_videos(train_file, test_file, g_path):
     train_names = []
     train_labels = []
@@ -122,6 +122,30 @@ def train_test_videos(train_file, test_file, g_path):
     test_labes = [classes[label] for label in test_labes]
 
     return train_names, train_labels, test_names, test_labes
+
+def test_loader(dataloaders):
+    #     inputs :  <class 'list'> 5
+    # --> 1 torch.float32 torch.Size([28, 3, 224, 224])
+    # --> 2 torch.float32 torch.Size([81, 3, 224, 224])
+    # --> 3 torch.float32 torch.Size([94, 3, 224, 224])
+    # --> 4 torch.float32 torch.Size([117, 3, 224, 224])
+    # --> 5 torch.float32 torch.Size([72, 3, 224, 224])
+    for inputs, labels in dataloaders["train"]:
+        # inputs = inputs.permute(1, 0, 2, 3, 4)
+        print('inputs : ', type(inputs), len(inputs))
+        # print('inputs : ', inputs.size())
+        # print('labels : ',labels.size())
+        for idx,input in enumerate(inputs):
+            print('-->',str(idx+1),input.dtype,input.size())
+        print()
+
+# def my_collate(batch):
+#     data = [item[0] for item in batch]
+#     target = [item[1] for item in batch]
+#     target = torch.LongTensor(target)
+#     # data = torch.FloatTensor(data)
+#     dt = [data,target]
+#     return dt
 
 def __main__():
     # Dataset, Labels, NumFrames =
@@ -159,30 +183,34 @@ def __main__():
     input_size = 224
     dataset_source = "frames"
     transforms = createTransforms(input_size)
-    numDiPerVideos = 2
+    numDiPerVideos = 1
+    numFrames = 14
     debugg_mode = False
-    avgmaxDuration = 1.66
-    interval_duration = 0.3
     num_workers = 4
-    batch_size = 8
+    batch_size = 16
     num_classes = 7
     modelType = 'alexnet'
     feature_extract = True
     joinType = 'tempMaxPool'
-    num_epochs = 16
-    path_results = os.path.join(dataset_path,'plot_data')
+    num_epochs = 20
+    path_results = os.path.join(dataset_path, 'plot_data')
+    scheduler_type = 'OnPlateau'
     
+    # dataset, labels, spatial_transform, source='frames', interval_duration=0.0, nDynamicImages=0, debugg_mode = False
     image_datasets = {
-        "train": ViolenceDatasetVideos( dataset=train_names, labels=train_labels, spatial_transform=transforms["train"], source=dataset_source,
-            interval_duration=interval_duration, difference=3, maxDuration=avgmaxDuration, nDynamicImages=numDiPerVideos, debugg_mode=debugg_mode, ),
-        "test": ViolenceDatasetVideos( dataset=test_names, labels=test_labels, spatial_transform=transforms["test"], source=dataset_source,
-            interval_duration=interval_duration, difference=3, maxDuration=avgmaxDuration, nDynamicImages=numDiPerVideos, debugg_mode=debugg_mode, )
+        "train": AnomalyDataset( dataset=train_names, labels=train_labels, spatial_transform=transforms["train"], source=dataset_source,
+            numFrames=numFrames, nDynamicImages=numDiPerVideos, debugg_mode=debugg_mode, ),
+        "test": AnomalyDataset( dataset=test_names, labels=test_labels, spatial_transform=transforms["test"], source=dataset_source,
+            numFrames=numFrames, nDynamicImages=numDiPerVideos, debugg_mode=debugg_mode, )
     }
     dataloaders_dict = {
-        "train": torch.utils.data.DataLoader( image_datasets["train"], batch_size=batch_size, shuffle=True, num_workers=num_workers, ),
-        "test": torch.utils.data.DataLoader( image_datasets["test"], batch_size=batch_size, shuffle=True, num_workers=num_workers, ),
+        # "train": torch.utils.data.DataLoader( image_datasets["train"], batch_size=batch_size, shuffle=True, num_workers=num_workers,collate_fn=my_collate ),
+        "train": torch.utils.data.DataLoader( image_datasets["train"], batch_size=batch_size, shuffle=True, num_workers=num_workers),
+        "test": torch.utils.data.DataLoader( image_datasets["test"], batch_size=batch_size, shuffle=True, num_workers=num_workers),
     }
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    # test_loader(dataloaders_dict)
 
     model, input_size = initialize_model( model_name=modelType, num_classes=num_classes, feature_extract=feature_extract, numDiPerVideos=numDiPerVideos, joinType=joinType, use_pretrained=True)
     model.to(device)
@@ -191,12 +219,13 @@ def __main__():
 
     optimizer = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
     # Decay LR by a factor of 0.1 every 7 epochs
-    # if scheduler_type == "StepLR":
-    exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
-    # elif scheduler_type == "OnPlateau":
-    #     exp_lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau( optimizer, patience=5, verbose=True )
+    if scheduler_type == "StepLR":
+        exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+    elif scheduler_type == "OnPlateau":
+        exp_lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau( optimizer, patience=5, verbose=True )
     criterion = nn.CrossEntropyLoss()
-    trainer = Trainer(model, dataloaders_dict, criterion, optimizer, exp_lr_scheduler, device, num_epochs, checkpoint_path=os.path.join(dataset_path,'checkpoints'))
+    model_name = get_model_name(modelType, scheduler_type, numDiPerVideos, dataset_source, feature_extract, joinType)
+    trainer = Trainer(model, dataloaders_dict, criterion, optimizer, exp_lr_scheduler, device, num_epochs, checkpoint_path = os.path.join(dataset_path,'checkpoints',model_name))
     train_lost = []
     train_acc = []
     test_lost = []
@@ -213,9 +242,9 @@ def __main__():
         test_acc.append(epoch_acc_test)
     
     print("saving loss and acc history...")
-    saveList(path_results, modelType, "StepLR", "train_lost", numDiPerVideos, dataset_source, feature_extract, joinType, train_lost,)
-    saveList(path_results, modelType, "StepLR","train_acc",numDiPerVideos, dataset_source, feature_extract, joinType, train_acc, )
-    saveList( path_results, modelType, "StepLR", "test_lost", numDiPerVideos, dataset_source, feature_extract, joinType, test_lost, )
-    saveList( path_results, modelType, "StepLR", "test_acc", numDiPerVideos, dataset_source, feature_extract, joinType, test_acc, )
+    saveList(path_results, modelType, scheduler_type, "train_lost", numDiPerVideos, dataset_source, feature_extract, joinType, train_lost,)
+    saveList(path_results, modelType, scheduler_type,"train_acc",numDiPerVideos, dataset_source, feature_extract, joinType, train_acc, )
+    saveList( path_results, modelType, scheduler_type, "test_lost", numDiPerVideos, dataset_source, feature_extract, joinType, test_lost, )
+    saveList( path_results, modelType, scheduler_type, "test_acc", numDiPerVideos, dataset_source, feature_extract, joinType, test_acc, )
 
 __main__()

@@ -10,7 +10,7 @@ from dinamycImage import *
 
 
 class AnomalyDataset(Dataset):
-    def __init__( self, dataset, labels, spatial_transform, source='frames', interval_duration=0.0, nDynamicImages=0, debugg_mode = False ):
+    def __init__( self, dataset, labels, spatial_transform, source='frames', numFrames=0, nDynamicImages=0, debugg_mode = False ):
         """
     Args:
         dataset (list): Paths to the videos.
@@ -22,7 +22,7 @@ class AnomalyDataset(Dataset):
         self.spatial_transform = spatial_transform
         self.images = dataset
         self.labels = labels
-        self.interval_duration = interval_duration
+        self.numFrames = numFrames
         self.nDynamicImages = nDynamicImages
         self.source = source
         self.debugg_mode = debugg_mode
@@ -39,8 +39,13 @@ class AnomalyDataset(Dataset):
             frames_list = os.listdir(vid_name)
             frames_list.sort(key=lambda f: int("".join(filter(str.isdigit, f))))
             total_frames = len(frames_list)
-            seqLen = int(total_frames/self.nDynamicImages)
+            
+            if self.nDynamicImages > 0:
+                seqLen = int(total_frames / self.nDynamicImages)
+            else: seqLen = self.numFrames
+            
             sequences = [ frames_list[x : x + seqLen] for x in range(0, total_frames, seqLen) ]
+            
             for seq in sequences:
                 if len(seq) == seqLen:
                     frames = []
@@ -50,9 +55,11 @@ class AnomalyDataset(Dataset):
                         img = np.array(img)
                         frames.append(img)
                     imgPIL, img = getDynamicImage(frames)
-                    dinamycImages.append(self.spatial_transform(imgPIL.convert("RGB")))
-
-        dinamycImages = torch.stack(dinamycImages, 0)
+                    imgPIL = self.spatial_transform(imgPIL.convert("RGB"))
+                    dinamycImages.append(imgPIL)
+                    # print(imgPIL.size())
+        # print(len(dinamycImages))
+        dinamycImages = torch.stack(dinamycImages, dim=0)
         
         return dinamycImages, label
 
