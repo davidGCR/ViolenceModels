@@ -5,6 +5,10 @@ import cv2
 import numpy as np
 import torch
 
+def get_model_name(modelType, scheduler_type, numDiPerVideos, dataset_source, feature_extract, joinType):
+    model_name = str(modelType) + '-' + dataset_source + '-Finetuned:' + str(not feature_extract) + '-' + str(numDiPerVideos) + 'di-' + joinType + '-' + scheduler_type
+    return model_name
+    
 def save_checkpoint(state, path):
   print('saving checkpoint ...')
   torch.save(state, path+'.tar')

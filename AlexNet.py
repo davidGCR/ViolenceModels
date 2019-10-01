@@ -44,7 +44,7 @@ class ViolenceModelAlexNet(nn.Module): ##ViolenceModel2
 
   def getFeatureVectorTempPool(self, x):
     lista = []
-    seqLen = len(x)
+    seqLen = self.seqLen
     for dimage in range(0, seqLen):
       feature = self.model(x[dimage])
       lista.append(feature)

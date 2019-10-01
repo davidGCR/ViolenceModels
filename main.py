@@ -34,9 +34,7 @@ from util import *
 from verifyParameters import *
 from transforms import *
 
-def get_model_name(modelType, scheduler_type, numDiPerVideos, dataset_source, feature_extract, joinType):
-    model_name = str(modelType) + '-' + dataset_source + '-Finetuned:' + str(not feature_extract) + '-' + str(numDiPerVideos) + 'di-' + joinType + '-' + scheduler_type
-    return model_name
+
 
 def init(dataset, vif_path, hockey_path_violence, hockey_path_noviolence, path_results, path_checkpoints, modelType, ndis, num_workers, data_transforms, dataset_source, interval_duration, avgmaxDuration,
     batch_size, num_epochs, feature_extract, joinType, scheduler_type, device, criterion, folds_number, debugg_mode = False):

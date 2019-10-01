@@ -7,7 +7,7 @@ from util import save_checkpoint
 
 
 class Trainer:
-    def __init__(self, model, dataloaders, criterion, optimizer, scheduler, device, num_epochs, checkpoint_path=''):
+    def __init__(self, model, dataloaders, criterion, optimizer, scheduler, device, num_epochs, checkpoint_path):
         self.model = model
         # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet, inception]
         # self.model_name = "alexnet"
