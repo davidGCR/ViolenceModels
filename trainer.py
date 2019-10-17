@@ -3,11 +3,12 @@ import torchvision
 # from tensorboardcolab import TensorBoardColab
 import time
 import copy
-from util import save_checkpoint
+from util import save_checkpoint, imshow
+from tqdm import tqdm
 
 
 class Trainer:
-    def __init__(self, model, dataloaders, criterion, optimizer, scheduler, device, num_epochs, checkpoint_path):
+    def __init__(self, model, dataloaders, criterion, optimizer, scheduler, device, num_epochs, checkpoint_path, numDynamicImages):
         self.model = model
         # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet, inception]
         # self.model_name = "alexnet"
@@ -29,6 +30,7 @@ class Trainer:
         self.checkpoint_path = checkpoint_path
         self.best_model_wts = copy.deepcopy(model.state_dict())
         self.best_acc = 0.0
+        self.numDynamicImages = numDynamicImages
 
     def train_epoch(self, epoch):
         # self.scheduler.step(epoch)
@@ -36,10 +38,15 @@ class Trainer:
         # is_inception = False
         running_loss = 0.0
         running_corrects = 0
+        padding = 5
         # Iterate over data.
-        for inputs, labels in self.dataloaders["train"]:
-            # print('==== dataloader size: ',inputs.size()) #[batch, ndi, ch, h, w]
-            inputs = inputs.permute(1, 0, 2, 3, 4)
+        for inputs, labels in tqdm(self.dataloaders["train"]): #inputs, labels:  <class 'torch.Tensor'> torch.Size([64, 3, 224, 224]) <class 'torch.Tensor'> torch.Size([64])
+            # print('inputs, labels: ',type(inputs),inputs.size(), type(labels), labels.size())
+            # images = torchvision.utils.make_grid(inputs.cpu().data, padding=padding)
+            # imshow(images)
+            if self.numDynamicImages > 1:
+                # print('==== dataloader size: ',inputs.size()) #[batch, ndi, ch, h, w]
+                inputs = inputs.permute(1, 0, 2, 3, 4)
             inputs = inputs.to(self.device)
             labels = labels.to(self.device)
             # zero the parameter gradients
@@ -88,7 +95,8 @@ class Trainer:
         
         # Iterate over data.
         for inputs, labels in self.dataloaders["test"]:
-            inputs = inputs.permute(1, 0, 2, 3, 4)
+            if self.numDynamicImages > 1:
+                inputs = inputs.permute(1, 0, 2, 3, 4)
             inputs = inputs.to(self.device)
             labels = labels.to(self.device)
             # zero the parameter gradients
@@ -113,8 +121,11 @@ class Trainer:
         print("{} Loss: {:.4f} Acc: {:.4f}".format("test", epoch_loss, epoch_acc))
         if self.checkpoint_path != None and epoch_acc > self.best_acc:
             self.best_acc = epoch_acc
-            self.best_model_wts = copy.deepcopy(self.model.state_dict())
-            save_checkpoint(self.model, self.checkpoint_path)
+            # self.best_model_wts = copy.deepcopy(self.model.state_dict())
+            print('SAving entire model...')
+            torch.save(self.model, self.checkpoint_path+'.pth')
+            # torch.save(self.model.state_dict(),self.checkpoint_path)
+            # save_checkpoint(self.model, self.checkpoint_path)
         # self.tb.save_value("testLoss", "test_loss", epoch, epoch_loss)
         # self.tb.save_value("testAcc", "test_acc", epoch, epoch_acc)
 

@@ -8,13 +8,17 @@ import numpy as np
 
 
 class Loss: 
-    
-    def __init__(self,num_classes):
+    # L = [mask smoothness] + [Region small] + [make sure classifier able to recognite selected class from preserved region] + [ensures the probab. of selected class , after remove salient region  is low]
+    def __init__(self,num_classes, regularizers):
         self.num_classes = num_classes
-        self.area_loss_coef = 8
-        self.smoothness_loss_coef = 0.5
-        self.preserver_loss_coef = 0.3
-        self.area_loss_power = 0.3
+        # self.area_loss_coef = 8
+        # self.smoothness_loss_coef = 0.5
+        # self.preserver_loss_coef = 0.3
+        # self.area_loss_power = 0.3
+        self.area_loss_coef = regularizers['area_loss_coef']
+        self.smoothness_loss_coef = regularizers['smoothness_loss_coef']
+        self.preserver_loss_coef = regularizers['preserver_loss_coef']
+        self.area_loss_power = regularizers['area_loss_power']
     
     def get(self, masks, images, targets, black_box_func):
     

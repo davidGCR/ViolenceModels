@@ -187,7 +187,7 @@ def __main__():
     numFrames = 14
     debugg_mode = False
     num_workers = 4
-    batch_size = 16
+    batch_size = 5
     num_classes = 7
     modelType = 'alexnet'
     feature_extract = True

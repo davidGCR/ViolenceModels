@@ -1,15 +1,16 @@
 import torch.nn as nn
 from torchvision import models
 from util import *
+from parameters import set_parameter_requires_grad
 from tempPooling import *
 from Identity import *
 import torch
 
 
 class ViolenceModelAlexNet(nn.Module): ##ViolenceModel2
-  def __init__(self, num_classes, seqLen, joinType, feature_extract= True):
+  def __init__(self, num_classes, numDiPerVideos, joinType, feature_extract):
       super(ViolenceModelAlexNet, self).__init__()
-      self.seqLen = seqLen
+      self.numDiPerVideos = numDiPerVideos
       self.joinType = joinType
       self.num_classes = num_classes
       self.model = models.alexnet(pretrained=True)
@@ -18,7 +19,7 @@ class ViolenceModelAlexNet(nn.Module): ##ViolenceModel2
       if self.joinType == 'cat':
         self.num_ftrs = self.model.classifier[6].in_features
         self.model.classifier = self.model.classifier[:-1]
-        self.linear = nn.Linear(self.num_ftrs*seqLen,self.num_classes)
+        self.linear = nn.Linear(self.num_ftrs*numDiPerVideos,self.num_classes)
       elif self.joinType == 'tempMaxPool':
         self.model = nn.Sequential(*list(self.model.children())[:-2]) # to tempooling
         # self.linear = nn.Linear(4096,2)
@@ -26,17 +27,23 @@ class ViolenceModelAlexNet(nn.Module): ##ViolenceModel2
       
   
   def forward(self, x):
-    if self.joinType == 'cat':
-      x = self.getFeatureVectorCat(x)
-    elif self.joinType == 'tempMaxPool':
-      x = self.getFeatureVectorTempPool(x)
+    shape = x.size()
+    if len(shape) == 4:
+      x = self.model(x)
+      x = torch.flatten(x, 1)
+      # print('x: ',x.size())
+    else:
+      if self.joinType == 'cat':
+        x = self.getFeatureVectorCat(x)
+      elif self.joinType == 'tempMaxPool':
+        x = self.getFeatureVectorTempPool(x)
     
     x = self.linear(x)
     return x
   
   def getFeatureVectorCat(self, x):
     lista = []
-    for dimage in range(0, self.seqLen):
+    for dimage in range(0, self.numDiPerVideos):
       feature = self.model(x[dimage])
       lista.append(feature)
     x = torch.cat(lista, dim=1)  
@@ -44,13 +51,13 @@ class ViolenceModelAlexNet(nn.Module): ##ViolenceModel2
 
   def getFeatureVectorTempPool(self, x):
     lista = []
-    seqLen = self.seqLen
+    seqLen = self.numDiPerVideos
     for dimage in range(0, seqLen):
       feature = self.model(x[dimage])
       lista.append(feature)
     minibatch = torch.stack(lista, 0)
     minibatch = minibatch.permute(1, 0, 2, 3, 4)
-    num_dynamic_images = self.seqLen
+    num_dynamic_images = self.numDiPerVideos
     tmppool = nn.MaxPool2d((num_dynamic_images, 1))
     lista_minibatch = []
     for idx in range(minibatch.size()[0]):

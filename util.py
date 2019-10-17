@@ -4,6 +4,7 @@ import glob
 import cv2
 import numpy as np
 import torch
+import matplotlib.pyplot as plt
 
 def get_model_name(modelType, scheduler_type, numDiPerVideos, dataset_source, feature_extract, joinType):
     model_name = str(modelType) + '-' + dataset_source + '-Finetuned:' + str(not feature_extract) + '-' + str(numDiPerVideos) + 'di-' + joinType + '-' + scheduler_type
@@ -24,7 +25,12 @@ def getViolenceData(path):
   numFrames = [len(glob.glob1(imagesF[i], "*.jpg")) for i in range(len(imagesF))]
   return imagesF, labels, numFrames
 
-  
+def imshow(img):
+    img = img / 2 + 0.5    
+    npimg = img.numpy()
+    plt.imshow(np.transpose(npimg, (1, 2, 0)))
+    plt.show()
+
 def createDataset(path_violence, path_noviolence):
     imagesF = []
 

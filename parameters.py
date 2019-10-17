@@ -1,9 +1,13 @@
 import torch
 
-def verifiParametersToTrain(model):
+def set_parameter_requires_grad(model, feature_extract):
+    if feature_extract:
+        for param in model.parameters():
+            param.requires_grad = False
+            
+def verifiParametersToTrain(model, feature_extract):
   params_to_update = model.parameters()
   print("Params to learn:")
-  feature_extract = True
   if feature_extract:
       params_to_update = []
       for name,param in model.named_parameters():

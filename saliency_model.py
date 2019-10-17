@@ -99,7 +99,6 @@ class SaliencyModel(nn.Module):
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1]*(num_blocks-1)
-        
         layers = []
         for stride in strides:
             layers.append(block(self.in_planes, planes, stride))
@@ -117,7 +116,8 @@ class SaliencyModel(nn.Module):
         scale2 = self.layer2(scale1)
         scale3 = self.layer3(scale2)
         scale4 = self.layer4(scale3)
-         
+        
+        # feature filter
         em = torch.squeeze(self.embedding(labels.view(-1, 1)), 1)
         act = torch.sum(scale4*em.view(-1, 512, 1, 1), 1, keepdim=True)
         th = torch.sigmoid(act)
@@ -139,9 +139,10 @@ class SaliencyModel(nn.Module):
         # print('out linear input:', out.size())
         
         a = torch.abs(saliency_chans[:,0,:,:])
-        b = torch.abs(saliency_chans[:,1,:,:])
+        b = torch.abs(saliency_chans[:, 1,:,:])
+        mask = torch.unsqueeze(a/(a+b), dim=1)
         
-        return torch.unsqueeze(a/(a+b), dim=1), out
+        return mask, out
 
 
 def saliency_model(num_classes):
