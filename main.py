@@ -35,34 +35,9 @@ from parameters import *
 from transforms import *
 from MaskDataset import MaskDataset
 from saliency_model import *
+from initialize_dataset import createDataset, getDataLoaders
 
-def getDataloaders(datasetType, train_x, train_y, test_x, test_y, data_transforms, numDiPerVideos, dataset_source, avgmaxDuration, interval_duration, batch_size, num_workers, debugg_mode, salModelFile):
-    image_datasets = None
-    if datasetType == 'hockey':
-        image_datasets = {
-            "train": ViolenceDatasetVideos( dataset=train_x, labels=train_y, spatial_transform=data_transforms["train"], source=dataset_source,
-                interval_duration=interval_duration,difference=3, maxDuration=avgmaxDuration, nDynamicImages=numDiPerVideos, debugg_mode=debugg_mode, ),
-            "test": ViolenceDatasetVideos( dataset=test_x, labels=test_y, spatial_transform=data_transforms["test"], source=dataset_source,
-                interval_duration=interval_duration, difference=3, maxDuration=avgmaxDuration, nDynamicImages=numDiPerVideos, debugg_mode=debugg_mode, )
-        }
-        
-    elif datasetType == 'masked':
-        net = saliency_model(num_classes=2)
-        # net = net.cuda()
-        net = torch.load(salModelFile, map_location=lambda storage, loc: storage)
 
-        image_datasets = {
-            "train": MaskDataset( dataset=train_x, labels=train_y, spatial_transform=data_transforms["train"], source=dataset_source,
-                difference=3, maxDuration=avgmaxDuration, nDynamicImages=numDiPerVideos, saliency_model=net ),
-            "test": MaskDataset( dataset=test_x, labels=test_y, spatial_transform=data_transforms["test"], source=dataset_source,
-                difference=3, maxDuration=avgmaxDuration, nDynamicImages=numDiPerVideos, saliency_model=net )
-        }
-
-    dataloaders_dict = {
-        "train": torch.utils.data.DataLoader( image_datasets["train"], batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True),
-        "test": torch.utils.data.DataLoader( image_datasets["test"], batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True),
-    }
-    return dataloaders_dict
 
 def init(dataset, vif_path, hockey_path_violence, hockey_path_noviolence, path_learning_curves, path_checkpoints, modelType, ndis, num_workers, data_transforms, dataset_source, interval_duration, avgmaxDuration,
     batch_size, num_epochs, feature_extract, joinType, scheduler_type, device, criterion, folds_number, debugg_mode = False, salModelFile=''):
@@ -98,7 +73,7 @@ def init(dataset, vif_path, hockey_path_violence, hockey_path_noviolence, path_l
                 test_x = list(itemgetter(*test_idx)(datasetAll))
                 test_y = list(itemgetter(*test_idx)(labelsAll))
 
-            dataloaders_dict = getDataloaders(dataset, train_x, train_y, test_x, test_y, data_transforms, numDiPerVideos, dataset_source,
+            dataloaders_dict = getDataLoaders(dataset, train_x, train_y, test_x, test_y, data_transforms, numDiPerVideos, dataset_source,
                                                 avgmaxDuration, interval_duration, batch_size, num_workers, debugg_mode, salModelFile)
             
             model = None

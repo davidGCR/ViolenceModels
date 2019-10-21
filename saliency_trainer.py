@@ -47,7 +47,7 @@ def load_checkpoint(net,optimizer,filename='small.pth.tar'):
 # num_epochs = 10
 # num_classes = 2
 
-def init(batch_size, num_workers, interval_duration, data_transforms, dataset_source, debugg_mode, numDiPerVideos, avgmaxDuration):
+def init(batch_size, num_workers, interval_duration, data_transforms, dataset_source, debugg_mode, numDiPerVideos, avgmaxDuration, shuffle=True):
     hockey_path_violence = "/media/david/datos/Violence DATA/HockeyFights/frames/violence"
     hockey_path_noviolence = "/media/david/datos/Violence DATA/HockeyFights/frames/nonviolence"
     datasetAll, labelsAll, numFramesAll = createDataset(hockey_path_violence, hockey_path_noviolence) #ordered
@@ -62,7 +62,7 @@ def init(batch_size, num_workers, interval_duration, data_transforms, dataset_so
     #     interval_duration=interval_duration, difference=3, maxDuration=avgmaxDuration, nDynamicImages=numDiPerVideos, debugg_mode=debugg_mode, )
     }
     dataloaders_dict = {
-        "train": torch.utils.data.DataLoader( image_datasets["train"], batch_size=batch_size, shuffle=True, num_workers=num_workers, ),
+        "train": torch.utils.data.DataLoader( image_datasets["train"], batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, ),
         # "val": torch.utils.data.DataLoader( image_datasets["val"], batch_size=batch_size, shuffle=False, num_workers=num_workers, ),
     }
     return image_datasets, dataloaders_dict
