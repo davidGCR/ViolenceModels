@@ -17,6 +17,11 @@ import argparse
 import os
 from torchvision.utils import save_image
 
+def normalize(img):
+  _min = torch.max(img)
+  _max = torch.min(img)
+  return (img - _min) / (_max - _min)
+
 def imshow(img):
     img = img / 2 + 0.5    
     npimg = img.numpy()
@@ -115,16 +120,18 @@ def init(batch_size, num_workers, debugg_mode, numDiPerVideos, dataset_source, d
     return datasetAll, image_datasets, dataloaders_dict
 
 def test(saliency_model_file, num_classes, dataloaders_dict, datasetAll, input_size, saliency_config, numDiPerVideos):
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     net = saliency_model(num_classes=num_classes)
-    net = net.cuda()
+    net = net.to(device)
     net = torch.load(saliency_model_file)
     net.eval()
     padding = 20
-    cuda0 = torch.device('cuda:0')
+    # cuda0 = torch.device('cuda:0')
+    
     ones = torch.ones(1, input_size, input_size)
     zeros = torch.zeros(1, input_size, input_size)
-    ones = ones.cuda()
-    zeros = zeros.cuda()
+    ones = ones.to(device)
+    zeros = zeros.to(device)
     # plt.figure(1)
     for i, data in enumerate(dataloaders_dict['test'], 0): #inputs, labels:  <class 'torch.Tensor'> torch.Size([3, 3, 224, 224]) <class 'torch.Tensor'> torch.Size([3])
         print('video: ',i,' ',datasetAll[i])
@@ -160,7 +167,7 @@ def test(saliency_model_file, num_classes, dataloaders_dict, datasetAll, input_s
         # segmented_central = torchvision.utils.make_grid((central_fr * y).cpu().data, padding=padding)
         # segmented = torchvision.utils.make_grid((inputs * y).cpu().data, padding=padding)  #apply binary mask
         segmented = torchvision.utils.make_grid((inputs * y).cpu().data, padding=padding)  #apply soft mask
-        save_image((inputs * y).cpu(),os.path.join('saliencyResults',str(i+1)+'.png'))
+        # save_image((inputs * y).cpu(),os.path.join('saliencyResults',str(i+1)+'.png'))
         # imshow(ct_images)
         # subplot(ct_images, di_images, mask_images, segmented, segmented_central, datasetAll[i])
         plot_sample(di_images, mask_images, segmented, 'video_'+str(i+1)+'_'+saliency_config)
