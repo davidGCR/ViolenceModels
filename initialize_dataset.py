@@ -5,7 +5,47 @@ import glob
 from ViolenceDatasetV2 import ViolenceDatasetVideos
 from MaskDataset import MaskDataset
 from saliency_model import *
+import constants
+import util
+from operator import itemgetter
+import kfolds
+import random
+import numpy as np
 
+def train_test_split_saliency(datasetAll, labelsAll, numFramesAll, folds_number=1):
+    train_x, train_y, test_x, test_y = None, None, None, None
+    train_x_path = os.path.join(constants.PATH_SALIENCY_DATASET, 'train_x.txt')
+    train_y_path = os.path.join(constants.PATH_SALIENCY_DATASET, 'train_y.txt')
+    test_x_path = os.path.join(constants.PATH_SALIENCY_DATASET, 'test_x.txt')
+    test_y_path = os.path.join(constants.PATH_SALIENCY_DATASET, 'test_y.txt')
+    if not os.path.exists(train_x_path) or not os.path.exists(train_y_path) or not os.path.exists(test_x_path) or not os.path.exists(test_y_path):
+        print('Creating Dataset...')
+        for train_idx, test_idx in kfolds.k_folds(n_splits=folds_number, subjects=len(datasetAll)):
+            combined = list(zip(datasetAll, labelsAll, numFramesAll))
+            random.shuffle(combined)
+            datasetAll[:], labelsAll[:], numFramesAll[:] = zip(*combined)
+            train_x = list(itemgetter(*train_idx)(datasetAll))
+            train_y = list(itemgetter(*train_idx)(labelsAll))
+            test_x = list(itemgetter(*test_idx)(datasetAll))
+            test_y = list(itemgetter(*test_idx)(labelsAll))
+            util.saveList2(train_x_path,train_x)
+            util.saveList2(train_y_path,train_y)
+            util.saveList2(test_x_path,test_x)
+            util.saveList2(test_y_path, test_y)
+    else:
+        print('Loading Dataset...')
+        train_x = util.loadList(train_x_path)
+        train_y = util.loadList(train_y_path)
+        test_x = util.loadList(test_x_path)
+        test_y = util.loadList(test_y_path)
+
+    # tx, ty = np.array(train_y), np.array(test_y)
+    # unique, counts = np.unique(tx, return_counts=True)
+    # print('train_balance: ', dict(zip(unique, counts)))
+    # unique, counts = np.unique(ty, return_counts=True)
+    # print('test_balance: ', dict(zip(unique, counts)))
+
+    return train_x, train_y, test_x, test_y
 
 def createDatasetViolence(path): #only violence videos
   imagesF = []
@@ -17,6 +57,13 @@ def createDatasetViolence(path): #only violence videos
   labels = list([1] * len(imagesF))
   numFrames = [len(glob.glob1(imagesF[i], "*.jpg")) for i in range(len(imagesF))]
   return imagesF, labels, numFrames
+
+def print_balance(train_y, test_y):
+    tx, ty = np.array(train_y), np.array(test_y)
+    unique, counts = np.unique(tx, return_counts=True)
+    print('train_balance: ', dict(zip(unique, counts)))
+    unique, counts = np.unique(ty, return_counts=True)
+    print('test_balance: ', dict(zip(unique, counts)))
 
 def createDataset(path_violence, path_noviolence):
     imagesF = []
@@ -38,6 +85,11 @@ def createDataset(path_violence, path_noviolence):
     Dataset = imagesF + imagesNoF
     Labels = list([1] * len(imagesF)) + list([0] * len(imagesNoF))
     NumFrames = [len(glob.glob1(Dataset[i], "*.jpg")) for i in range(len(Dataset))]
+    #Shuffle data
+    combined = list(zip(Dataset, Labels, NumFrames))
+    random.shuffle(combined)
+    Dataset[:], Labels[:], NumFrames[:] = zip(*combined)
+
     print('Dataset, Labels, NumFrames: ', len(Dataset), len(Labels), len(NumFrames))
     return Dataset, Labels, NumFrames
 

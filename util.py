@@ -34,6 +34,13 @@ def saveList(path_out,model, scheduler_type,curve, numDI, source_type, feature_e
   with open(data_file, 'wb') as filehandle:
       # store the data as binary data stream
     pickle.dump(lista, filehandle)
+    print('saved ... ', data_file)
+
+def saveLearningCurve(path_out, lista):
+  data_file = path_out
+  with open(data_file, 'wb') as filehandle:
+      # store the data as binary data stream
+    pickle.dump(lista, filehandle)
     print('saved ... ',data_file)
 
 def saveData(path_out,model,curve, numDI, source_type, feature_extract, joinType,lista):

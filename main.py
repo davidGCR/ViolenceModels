@@ -12,7 +12,6 @@ import cv2
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import models
-import torch
 from torchvision import transforms
 from PIL import Image
 from torch.autograd import Variable
@@ -35,7 +34,8 @@ from parameters import *
 from transforms import *
 from MaskDataset import MaskDataset
 from saliency_model import *
-from initialize_dataset import createDataset, getDataLoaders
+import initialize_dataset
+import constants
 
 
 
@@ -48,11 +48,11 @@ def init(dataset, vif_path, hockey_path_violence, hockey_path_noviolence, path_l
         test_lost = []
         test_acc = []
         if dataset == 'hockey' or  dataset == 'masked':
-            datasetAll, labelsAll, numFramesAll = createDataset(hockey_path_violence, hockey_path_noviolence) #ordered
-            combined = list(zip(datasetAll, labelsAll, numFramesAll))
-            random.shuffle(combined)
-            datasetAll[:], labelsAll[:], numFramesAll[:] = zip(*combined) 
-            train_idx, test_idx = None, None
+            datasetAll, labelsAll, numFramesAll = initialize_dataset.createDataset(hockey_path_violence, hockey_path_noviolence) #shuffle
+            # combined = list(zip(datasetAll, labelsAll, numFramesAll))
+            # random.shuffle(combined)
+            # datasetAll[:], labelsAll[:], numFramesAll[:] = zip(*combined) 
+            # train_idx, test_idx = None, None
         # elif dataset == 'violentflows':
 
         print("CONFIGURATION: ", "modelType:", modelType, ", numDiPerVideos:", numDiPerVideos,
@@ -72,8 +72,10 @@ def init(dataset, vif_path, hockey_path_violence, hockey_path_noviolence, path_l
                 train_y = list(itemgetter(*train_idx)(labelsAll))
                 test_x = list(itemgetter(*test_idx)(datasetAll))
                 test_y = list(itemgetter(*test_idx)(labelsAll))
+                initialize_dataset.print_balance(train_y, test_y)
+                
 
-            dataloaders_dict = getDataLoaders(dataset, train_x, train_y, test_x, test_y, data_transforms, numDiPerVideos, dataset_source,
+            dataloaders_dict = initialize_dataset.getDataLoaders(dataset, train_x, train_y, test_x, test_y, data_transforms, numDiPerVideos, dataset_source,
                                                 avgmaxDuration, interval_duration, batch_size, num_workers, debugg_mode, salModelFile)
             
             model = None
@@ -89,10 +91,13 @@ def init(dataset, vif_path, hockey_path_violence, hockey_path_noviolence, path_l
             elif scheduler_type == "OnPlateau":
                 exp_lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau( optimizer, patience=5, verbose=True )
             ### trainer
-            model_name = get_model_name(modelType, scheduler_type, numDiPerVideos, dataset_source, feature_extract, joinType)
-            print('model_name: ', model_name)
+            MODEL_NAME = get_model_name(modelType, scheduler_type, numDiPerVideos, dataset_source, feature_extract, joinType)
             if folds_number == 1:
-                trainer = Trainer(model, dataloaders_dict, criterion, optimizer, exp_lr_scheduler, device, num_epochs, os.path.join(path_checkpoints, model_name),numDiPerVideos)
+                MODEL_NAME = MODEL_NAME+constants.LABEL_PRODUCTION_MODEL
+            print('model_name: ', MODEL_NAME)
+
+            if folds_number == 1:
+                trainer = Trainer(model, dataloaders_dict, criterion, optimizer, exp_lr_scheduler, device, num_epochs, os.path.join(path_checkpoints, MODEL_NAME),numDiPerVideos)
             else:
                 trainer = Trainer( model, dataloaders_dict, criterion, optimizer, exp_lr_scheduler, device, num_epochs, None, numDiPerVideos)
 
@@ -123,20 +128,25 @@ def init(dataset, vif_path, hockey_path_violence, hockey_path_noviolence, path_l
             #         'optimizer_state_dict': optimizer.state_dict()
             #         }, filepath)
         print("saving loss and acc history...")
-        saveList(path_learning_curves, modelType, scheduler_type, "train_lost", numDiPerVideos, dataset_source, feature_extract, joinType, train_lost,)
-        saveList(path_learning_curves, modelType, scheduler_type,"train_acc",numDiPerVideos, dataset_source, feature_extract, joinType, train_acc, )
-        saveList(path_learning_curves, modelType, scheduler_type, "test_lost", numDiPerVideos, dataset_source, feature_extract, joinType, test_lost, )
-        saveList(path_learning_curves, modelType, scheduler_type, "test_acc", numDiPerVideos, dataset_source, feature_extract, joinType, test_acc, )
+        saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+"-train_lost.txt"), train_lost)
+        saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+"-train_acc.txt"), train_acc)
+        saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+"-test_lost.txt"), test_lost)
+        saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+"-test_acc.txt"),test_acc)
+        # saveList(path_learning_curves, modelType, scheduler_type, "train_lost", numDiPerVideos, dataset_source, feature_extract, joinType, train_lost,)
+        # saveList(path_learning_curves, modelType, scheduler_type,"train_acc",numDiPerVideos, dataset_source, feature_extract, joinType, train_acc, )
+        # saveList(path_learning_curves, modelType, scheduler_type, "test_lost", numDiPerVideos, dataset_source, feature_extract, joinType, test_lost, )
+        # saveList(path_learning_curves, modelType, scheduler_type, "test_acc", numDiPerVideos, dataset_source, feature_extract, joinType, test_acc, )
 
 def __main__():
 
     # python3 main.py --dataset hockey --numEpochs 12 --ndis 1 --foldsNumber 1 --featureExtract true --checkpointPath BlackBoxModels
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset",type=str)
-    parser.add_argument("--vifPath",type=str,default="/media/david/datos/Violence DATA/violentflows/movies Frames",help="Directory for Violent Flows dataset")
-    parser.add_argument("--pathViolence",type=str,default="/media/david/datos/Violence DATA/HockeyFights/frames/violence",help="Directory containing violence videos")
-    parser.add_argument("--pathNonviolence",type=str,default="/media/david/datos/Violence DATA/HockeyFights/frames/nonviolence",help="Directory containing non violence videos")
-    parser.add_argument("--pathLearningCurves",type=str,default="/media/david/datos/Violence DATA/HockeyFights/Results",help="Directory containing results")
+    parser.add_argument("--vifPath",type=str,default=constants.PATH_VIOLENTFLOWS_FRAMES,help="Directory for Violent Flows dataset")
+    parser.add_argument("--pathViolence",type=str,default=constants.PATH_HOCKEY_FRAMES_VIOLENCE,help="Directory containing violence videos")
+    parser.add_argument("--pathNonviolence",type=str,default=constants.PATH_HOCKEY_FRAMES_NON_VIOLENCE,help="Directory containing non violence videos")
+    parser.add_argument("--pathLearningCurves", type=str, default=constants.PATH_LEARNING_CURVES_DI, help="Directory containing results")
+    parser.add_argument("--checkpointPath", type=str, default=constants.PATH_CHECKPOINTS_DI)
     parser.add_argument("--modelType",type=str,default="alexnet",help="model")
     parser.add_argument("--numEpochs",type=int,default=30)
     parser.add_argument("--batchSize",type=int,default=64)
@@ -145,13 +155,10 @@ def __main__():
     parser.add_argument("--debuggMode", type=bool, default=False, help="show prints")
     parser.add_argument("--ndis", nargs='+', type=int, help="num dyn imgs")
     parser.add_argument("--joinType", type=str, default="tempMaxPool", help="show prints")
-    parser.add_argument("--checkpointPath", type=str, default='/media/david/datos/Violence DATA/HockeyFights/checkpoints')
     parser.add_argument("--foldsNumber", type=int, default=5)
     parser.add_argument("--salModelFile", type=str, default='')
 
     args = parser.parse_args()
-
-    path_models = "/media/david/datos/Violence DATA/HockeyFights/Models"
     dataset = args.dataset
     vif_path = args.vifPath
     path_learning_curves = args.pathLearningCurves

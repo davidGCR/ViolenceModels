@@ -40,7 +40,7 @@ class Trainer:
         running_corrects = 0
         padding = 5
         # Iterate over data.
-        for inputs, labels in tqdm(self.dataloaders["train"]): #inputs, labels:  <class 'torch.Tensor'> torch.Size([64, 3, 224, 224]) <class 'torch.Tensor'> torch.Size([64])
+        for inputs, labels, video_names in tqdm(self.dataloaders["train"]): #inputs, labels:  <class 'torch.Tensor'> torch.Size([64, 3, 224, 224]) <class 'torch.Tensor'> torch.Size([64])
             # print('inputs, labels: ',type(inputs),inputs.size(), type(labels), labels.size())
             # images = torchvision.utils.make_grid(inputs.cpu().data, padding=padding)
             # imshow(images)
@@ -94,7 +94,7 @@ class Trainer:
         self.model.eval()
         
         # Iterate over data.
-        for inputs, labels in self.dataloaders["test"]:
+        for inputs, labels, video_names in self.dataloaders["test"]:
             if self.numDynamicImages > 1:
                 inputs = inputs.permute(1, 0, 2, 3, 4)
             inputs = inputs.to(self.device)
@@ -122,7 +122,7 @@ class Trainer:
         if self.checkpoint_path != None and epoch_acc > self.best_acc:
             self.best_acc = epoch_acc
             # self.best_model_wts = copy.deepcopy(self.model.state_dict())
-            print('SAving entire model...')
+            print('Saving entire model...')
             torch.save(self.model, self.checkpoint_path+'.pth')
             # torch.save(self.model.state_dict(),self.checkpoint_path)
             # save_checkpoint(self.model, self.checkpoint_path)

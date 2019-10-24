@@ -1,6 +1,6 @@
 import sys
 sys.path.insert(1, '/media/david/datos/PAPERS-SOURCE_CODE/MyCode')
-from dataset import *
+from anomaly_dataset import AnomalyDataset
 import os
 import re
 from util import video2Images2, saveList, get_model_name
@@ -13,11 +13,13 @@ from transforms import createTransforms
 import torch.nn as nn
 import torch
 from initializeModel import initialize_model
-from verifyParameters import verifiParametersToTrain
+from parameters import verifiParametersToTrain
 import torch.optim as optim
 from torch.optim import lr_scheduler
 from trainer import Trainer
 import random
+import util
+import initialize_dataset
 
 def extractMetadata(path='/media/david/datos/Violence DATA/AnomalyCRIME/UCFCrime2Local/videos'):
     paths = os.listdir(path)
@@ -148,19 +150,6 @@ def test_loader(dataloaders):
 #     return dt
 
 def __main__():
-    # Dataset, Labels, NumFrames =
-    # videos2frames('/media/david/datos/Violence DATA/AnomalyCRIME/UCFCrime2Local/videos', '/media/david/datos/Violence DATA/AnomalyCRIME/UCFCrime2Local/frames')
-    # names, labels, paths = extractMetadata('/media/david/datos/Violence DATA/AnomalyCRIME/UCFCrime2Local/videos')
-    # print('names: ', names)
-    # print('labels: ', labels)
-    # print('paths: ',paths)
-    # cutVideo('/media/david/datos/Violence DATA/AnomalyCRIME/Temporal_Anomaly_Annotation_for_Testing_Videos.txt')
-    # dataset_path = '/media/david/datos/Violence DATA/AnomalyCRIME/UCFCrime2Local'
-    # video_name = 'Stealing009'
-    # plotBoundingBox(os.path.join(dataset_path,'videos/'+video_name+'_x264.mp4'),os.path.join(dataset_path,'readme/Txt annotations/'+video_name +'.txt'))
-    # print('Dataset: ', Dataset)
-    # print('Labels: ', Labels)
-    # print('NumFrames: ', NumFrames)
 
     dataset_path = '/media/david/datos/Violence DATA/AnomalyCRIME/UCFCrime2Local'
     train_videos_path = os.path.join(dataset_path, 'readme', 'Train_split_AD.txt')
@@ -214,7 +203,7 @@ def __main__():
 
     model, input_size = initialize_model( model_name=modelType, num_classes=num_classes, feature_extract=feature_extract, numDiPerVideos=numDiPerVideos, joinType=joinType, use_pretrained=True)
     model.to(device)
-    params_to_update = verifiParametersToTrain(model)
+    params_to_update = verifiParametersToTrain(model, feature_extract)
     print(model)
 
     optimizer = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
@@ -225,7 +214,7 @@ def __main__():
         exp_lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau( optimizer, patience=5, verbose=True )
     criterion = nn.CrossEntropyLoss()
     model_name = get_model_name(modelType, scheduler_type, numDiPerVideos, dataset_source, feature_extract, joinType)
-    trainer = Trainer(model, dataloaders_dict, criterion, optimizer, exp_lr_scheduler, device, num_epochs, checkpoint_path = os.path.join(dataset_path,'checkpoints',model_name))
+    trainer = Trainer(model, dataloaders_dict, criterion, optimizer, exp_lr_scheduler, device, num_epochs, os.path.join(dataset_path,'checkpoints',model_name),numDiPerVideos)
     train_lost = []
     train_acc = []
     test_lost = []
@@ -242,9 +231,9 @@ def __main__():
         test_acc.append(epoch_acc_test)
     
     print("saving loss and acc history...")
-    saveList(path_results, modelType, scheduler_type, "train_lost", numDiPerVideos, dataset_source, feature_extract, joinType, train_lost,)
-    saveList(path_results, modelType, scheduler_type,"train_acc",numDiPerVideos, dataset_source, feature_extract, joinType, train_acc, )
-    saveList( path_results, modelType, scheduler_type, "test_lost", numDiPerVideos, dataset_source, feature_extract, joinType, test_lost, )
-    saveList( path_results, modelType, scheduler_type, "test_acc", numDiPerVideos, dataset_source, feature_extract, joinType, test_acc, )
+    # saveList(path_results, modelType, scheduler_type, "train_lost", numDiPerVideos, dataset_source, feature_extract, joinType, train_lost,)
+    # saveList(path_results, modelType, scheduler_type,"train_acc",numDiPerVideos, dataset_source, feature_extract, joinType, train_acc, )
+    # saveList( path_results, modelType, scheduler_type, "test_lost", numDiPerVideos, dataset_source, feature_extract, joinType, test_lost, )
+    # saveList( path_results, modelType, scheduler_type, "test_acc", numDiPerVideos, dataset_source, feature_extract, joinType, test_acc, )
 
 __main__()

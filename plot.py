@@ -107,10 +107,12 @@ def plot_results(path, modelType, lastEpoch, nfolds):
         plotScalarCombined(train_lost, test_lost, num_epochs, 'Error Promedio', 'Error',fig2,3,2,6, lastEpoch)
 
     # plt.axvline(x=lastEpoch, color='g', linestyle='--')
-    # plt.text(-5.0, 0, 'Accuracy: '+str(avgTestAcc[lastEpoch].data), horizontalalignment='center', verticalalignment='center',
-          # bbox=dict(boxstyle="square",
-          #     ec=(1., 0.5, 0.5),
-          #     fc=(1., 0.8, 0.8),))
+    acc = np.max(avgTestAcc[0:lastEpoch+1])
+    
+    plt.text(-5.0, 0, 'Accuracy: '+str(acc), horizontalalignment='center', verticalalignment='center',
+          bbox=dict(boxstyle="square",
+              ec=(1., 0.5, 0.5),
+              fc=(1., 0.8, 0.8),))
 
     plt.show()
 

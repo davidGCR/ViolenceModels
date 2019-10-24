@@ -9,7 +9,7 @@ from scipy import misc
 # from resnet import resnet
 # from loss import Loss
 from saliency_model import *
-from util import createDataset
+import initialize_dataset
 import random
 from tqdm import tqdm
 from ViolenceDatasetV2 import ViolenceDatasetVideos
@@ -19,6 +19,9 @@ from loss import Loss
 from torch.optim import lr_scheduler
 import argparse
 import os
+import constants
+import kfolds
+import util
 
 def save_checkpoint(state, filename='sal.pth.tar'):
     print('save in: ',filename)
@@ -47,29 +50,26 @@ def load_checkpoint(net,optimizer,filename='small.pth.tar'):
 # num_epochs = 10
 # num_classes = 2
 
+
 def init(batch_size, num_workers, interval_duration, data_transforms, dataset_source, debugg_mode, numDiPerVideos, avgmaxDuration, shuffle=True):
-    hockey_path_violence = "/media/david/datos/Violence DATA/HockeyFights/frames/violence"
-    hockey_path_noviolence = "/media/david/datos/Violence DATA/HockeyFights/frames/nonviolence"
-    datasetAll, labelsAll, numFramesAll = createDataset(hockey_path_violence, hockey_path_noviolence) #ordered
-    combined = list(zip(datasetAll, labelsAll, numFramesAll))
-    random.shuffle(combined)
-    datasetAll[:], labelsAll[:], numFramesAll[:] = zip(*combined) 
-    print(len(datasetAll), len(labelsAll), len(numFramesAll))
+    datasetAll, labelsAll, numFramesAll = initialize_dataset.createDataset(constants.PATH_HOCKEY_FRAMES_VIOLENCE, constants.PATH_HOCKEY_FRAMES_NON_VIOLENCE) #ordered
+    # combined = list(zip(datasetAll, labelsAll, numFramesAll))
+    # random.shuffle(combined)
+    # datasetAll[:], labelsAll[:], numFramesAll[:] = zip(*combined) 
+    # print(len(datasetAll), len(labelsAll), len(numFramesAll))
+    train_x, train_y, _, _ = initialize_dataset.train_test_split_saliency(datasetAll,labelsAll, numFramesAll)
+    print(len(train_x), len(train_y), len(numFramesAll))
     image_datasets = {
-    "train": ViolenceDatasetVideos( dataset=datasetAll, labels=labelsAll, spatial_transform=data_transforms["train"], source=dataset_source,
-        interval_duration=interval_duration,difference=3, maxDuration=avgmaxDuration, nDynamicImages=numDiPerVideos, debugg_mode=debugg_mode, ),
-    # "val": ViolenceDatasetVideos( dataset=datasetAll, labels=labelsAll, spatial_transform=data_transforms["val"], source=dataset_source,
-    #     interval_duration=interval_duration, difference=3, maxDuration=avgmaxDuration, nDynamicImages=numDiPerVideos, debugg_mode=debugg_mode, )
+        "train": ViolenceDatasetVideos( dataset=train_x, labels=train_y, spatial_transform=data_transforms["train"], source=dataset_source,
+                interval_duration=interval_duration,difference=3, maxDuration=avgmaxDuration, nDynamicImages=numDiPerVideos, debugg_mode=debugg_mode, ),
     }
     dataloaders_dict = {
         "train": torch.utils.data.DataLoader( image_datasets["train"], batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, ),
-        # "val": torch.utils.data.DataLoader( image_datasets["val"], batch_size=batch_size, shuffle=False, num_workers=num_workers, ),
     }
     return image_datasets, dataloaders_dict
 
 def train(num_classes, num_epochs, regularizers, device, checkpoint_path, dataloaders_dict, black_box_file, numDynamicImages=1):
     # trainloader,testloader,classes = cifar10()
-
     net = saliency_model(num_classes=num_classes)
     net = net.cuda()
     criterion = nn.CrossEntropyLoss()
@@ -82,8 +82,6 @@ def train(num_classes, num_epochs, regularizers, device, checkpoint_path, datalo
     # elif scheduler_type == "OnPlateau":
     #     exp_lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, verbose=True)
                 
-    # black_box_func = resnet(pretrained=True)
-    # black_box_func = torch.load('/media/david/datos/Violence DATA/HockeyFights/checkpoints/resnet18-frames-Finetuned:False-3di-tempMaxPool-OnPlateau.tar')
     black_box_func = torch.load(black_box_file)
     black_box_func = black_box_func.cuda()
     loss_func = Loss(num_classes=num_classes, regularizers=regularizers)
@@ -96,7 +94,7 @@ def train(num_classes, num_epochs, regularizers, device, checkpoint_path, datalo
         
         for i, data in tqdm(enumerate(dataloaders_dict['train'], 0)):
             # get the inputs
-            inputs, labels = data #dataset load [bs,ndi,c,w,h]
+            inputs, labels, video_name = data #dataset load [bs,ndi,c,w,h]
             # print('dataset element: ',inputs_r.shape) #torch.Size([8, 1, 3, 224, 224])
             if numDynamicImages > 1:
                 inputs = inputs.permute(1, 0, 2, 3, 4)
@@ -133,7 +131,7 @@ def train(num_classes, num_epochs, regularizers, device, checkpoint_path, datalo
         if epoch_loss < best_loss:
             best_loss = epoch_loss
             # self.best_model_wts = copy.deepcopy(self.model.state_dict())
-            print('SAving entire model...')
+            print('Saving entire saliency model...')
             save_checkpoint(net,checkpoint_path)
 
 def __main__():
@@ -145,7 +143,7 @@ def __main__():
     parser.add_argument("--smoothL", type=float, default=None)
     parser.add_argument("--preserverL", type=float, default=None)
     parser.add_argument("--areaPowerL", type=float, default=None)
-    parser.add_argument("--saliencyModelFolder",type=str)
+    parser.add_argument("--saliencyModelFolder",type=str, default=constants.PATH_SALIENCY_MODELS)
     parser.add_argument("--blackBoxFile",type=str) #areaL-9.0_smoothL-0.3_epochs-20
     
     # parser.add_argument("--areaL", type=float, default=8)

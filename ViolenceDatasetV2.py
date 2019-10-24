@@ -10,7 +10,7 @@ from dinamycImage import *
 
 
 class ViolenceDatasetVideos(Dataset):
-    def __init__(self, dataset, labels, spatial_transform, source='frames', interval_duration=0.0, difference=3, maxDuration=0, nDynamicImages=0, debugg_mode = False):
+    def __init__(self, dataset, labels, spatial_transform, source, interval_duration=0.0, difference=3, maxDuration=0, nDynamicImages=0, debugg_mode = False):
         self.spatial_transform = spatial_transform
         self.images = dataset
         self.labels = labels
@@ -26,12 +26,13 @@ class ViolenceDatasetVideos(Dataset):
 
     def __getitem__(self, idx):
         label = self.labels[idx]
+        video_name = self.images[idx]
         dinamycImages = self.fromFrames(idx)
         dinamycImages = torch.stack(dinamycImages, 0)
         if self.nDynamicImages == 1:
             dinamycImages = dinamycImages.squeeze(dim=0)
         # print('dinamycImages, label: ',type(dinamycImages), dinamycImages.size(), type(label), label)
-        return dinamycImages, label #dinamycImages, label:  <class 'torch.Tensor'> <class 'int'> torch.Size([3, 224, 224])
+        return dinamycImages, label, video_name #dinamycImages, label:  <class 'torch.Tensor'> <class 'int'> torch.Size([3, 224, 224])
 
     def fromFrames(self, idx):
         vid_name = self.images[idx]
@@ -43,6 +44,10 @@ class ViolenceDatasetVideos(Dataset):
         sequences = [
             frames_list[x : x + seqLen] for x in range(0, total_frames, seqLen)
         ]
+        # print('nDynamicImages: ', self.nDynamicImages)
+        # print('total_frames: ', total_frames)
+        # print('seqLen: ', seqLen)
+        # print('Num sequences: ', len(sequences))
         for seq in sequences:
             if len(seq) == seqLen:
                 frames = []
