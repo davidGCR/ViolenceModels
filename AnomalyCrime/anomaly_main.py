@@ -156,18 +156,16 @@ def __main__():
     test_videos_path = os.path.join(dataset_path, 'readme', 'Test_split_AD.txt')
     path_dataset_frames = os.path.join(dataset_path,'frames')
     train_names, train_labels, test_names, test_labels = train_test_videos(train_videos_path, test_videos_path, path_dataset_frames)
-    
     combined = list(zip(train_names, train_labels))
     random.shuffle(combined)
     train_names[:], train_labels[:] = zip(*combined)
-
     combined = list(zip(test_names, test_labels))
     random.shuffle(combined)
     test_names[:], test_labels[:] = zip(*combined)
 
     # print(train_names)
     # print(train_labels)
-    # print(len(datasetAll), len(labelsAll), len(numFramesAll))
+    # print(len(train_names), len(test_names))
 
     input_size = 224
     dataset_source = "frames"
@@ -176,13 +174,13 @@ def __main__():
     numFrames = 14
     debugg_mode = False
     num_workers = 4
-    batch_size = 5
+    batch_size = 4
     num_classes = 7
     modelType = 'alexnet'
     feature_extract = True
     joinType = 'tempMaxPool'
-    num_epochs = 20
-    path_results = os.path.join(dataset_path, 'plot_data')
+    num_epochs = 1
+    # path_results = os.path.join(dataset_path, 'plot_data')
     scheduler_type = 'OnPlateau'
     
     # dataset, labels, spatial_transform, source='frames', interval_duration=0.0, nDynamicImages=0, debugg_mode = False
@@ -199,12 +197,12 @@ def __main__():
     }
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    # test_loader(dataloaders_dict)
+    # # test_loader(dataloaders_dict)
 
     model, input_size = initialize_model( model_name=modelType, num_classes=num_classes, feature_extract=feature_extract, numDiPerVideos=numDiPerVideos, joinType=joinType, use_pretrained=True)
     model.to(device)
     params_to_update = verifiParametersToTrain(model, feature_extract)
-    print(model)
+    # print(model)
 
     optimizer = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
     # Decay LR by a factor of 0.1 every 7 epochs
@@ -215,22 +213,22 @@ def __main__():
     criterion = nn.CrossEntropyLoss()
     model_name = get_model_name(modelType, scheduler_type, numDiPerVideos, dataset_source, feature_extract, joinType)
     trainer = Trainer(model, dataloaders_dict, criterion, optimizer, exp_lr_scheduler, device, num_epochs, os.path.join(dataset_path,'checkpoints',model_name),numDiPerVideos)
-    train_lost = []
-    train_acc = []
-    test_lost = []
-    test_acc = []
+    # train_lost = []
+    # train_acc = []
+    # test_lost = []
+    # test_acc = []
     for epoch in range(1, num_epochs + 1):
         print("----- Epoch {}/{}".format(epoch, num_epochs))
         # Train and evaluate
         epoch_loss_train, epoch_acc_train = trainer.train_epoch(epoch)
         epoch_loss_test, epoch_acc_test = trainer.test_epoch(epoch)
         exp_lr_scheduler.step(epoch_loss_test)
-        train_lost.append(epoch_loss_train)
-        train_acc.append(epoch_acc_train)
-        test_lost.append(epoch_loss_test)
-        test_acc.append(epoch_acc_test)
+        # train_lost.append(epoch_loss_train)
+        # train_acc.append(epoch_acc_train)
+        # test_lost.append(epoch_loss_test)
+        # test_acc.append(epoch_acc_test)
     
-    print("saving loss and acc history...")
+    # print("saving loss and acc history...")
     # saveList(path_results, modelType, scheduler_type, "train_lost", numDiPerVideos, dataset_source, feature_extract, joinType, train_lost,)
     # saveList(path_results, modelType, scheduler_type,"train_acc",numDiPerVideos, dataset_source, feature_extract, joinType, train_acc, )
     # saveList( path_results, modelType, scheduler_type, "test_lost", numDiPerVideos, dataset_source, feature_extract, joinType, test_lost, )

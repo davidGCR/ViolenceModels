@@ -47,10 +47,10 @@ class AnomalyDataset(Dataset):
                     imgPIL = self.spatial_transform(imgPIL.convert("RGB"))
                     dinamycImages.append(imgPIL)
                     # print(imgPIL.size())
-        # print(len(dinamycImages))
-        dinamycImages = torch.stack(dinamycImages, dim=0)
         
-        return dinamycImages, label
+        dinamycImages = torch.stack(dinamycImages, dim=0)
+        # print(dinamycImages.size())
+        return dinamycImages, label, vid_name
 
         #####################################################################################################################################
 
