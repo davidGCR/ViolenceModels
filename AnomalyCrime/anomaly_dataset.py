@@ -10,17 +10,34 @@ from dinamycImage import *
 
 
 class AnomalyDataset(Dataset):
-    def __init__( self, dataset, labels, spatial_transform, source='frames', numFrames=0, nDynamicImages=0, debugg_mode = False ):
+    def __init__( self, dataset, labels, spatial_transform, source='frames', numFrames=0, nDynamicImages=0, debugg_mode = False, sequenceLength=0):
         self.spatial_transform = spatial_transform
         self.images = dataset
         self.labels = labels
-        self.numFrames = numFrames
+        self.numFrames = numFrames #num frames to resume
         self.nDynamicImages = nDynamicImages
         self.source = source
         self.debugg_mode = debugg_mode
+        self.sequenceLength = sequenceLength
 
     def __len__(self):
         return len(self.images)
+    
+    def getSequences(self, vid_name):
+        frames_list = os.listdir(vid_name)
+        frames_list.sort(key=lambda f: int("".join(filter(str.isdigit, f))))
+        if self.sequenceLength == 0: num_frames_on_video = len(frames_list)
+        else: num_frames_on_video = self.sequenceLength
+        if self.nDynamicImages > 0:
+            seqLen = int(num_frames_on_video / self.nDynamicImages)
+        else: seqLen = self.numFrames
+        sequences = [frames_list[x:x + seqLen] for x in range(0, num_frames_on_video, seqLen)]
+        if len(sequences) > self.nDynamicImages:
+            diff = len(sequences) - self.nDynamicImages
+            sequences = sequences[: - diff]
+        # if len(sequences) != self.nDynamicImages:
+        # print('-->len(sequences)',len(sequences))
+        return sequences, seqLen
 
     def __getitem__(self, idx):
         vid_name = self.images[idx]
@@ -28,13 +45,7 @@ class AnomalyDataset(Dataset):
         label = self.labels[idx]
         dinamycImages = []
         if self.source == 'frames':
-            frames_list = os.listdir(vid_name)
-            frames_list.sort(key=lambda f: int("".join(filter(str.isdigit, f))))
-            total_frames = len(frames_list)
-            if self.nDynamicImages > 0:
-                seqLen = int(total_frames / self.nDynamicImages)
-            else: seqLen = self.numFrames
-            sequences = [ frames_list[x : x + seqLen] for x in range(0, total_frames, seqLen) ]
+            sequences, seqLen = self.getSequences(vid_name)
             for seq in sequences:
                 if len(seq) == seqLen:
                     frames = []
@@ -49,7 +60,9 @@ class AnomalyDataset(Dataset):
                     # print(imgPIL.size())
         
         dinamycImages = torch.stack(dinamycImages, dim=0)
-        # print(dinamycImages.size())
+        if self.nDynamicImages == 1:
+            dinamycImages = dinamycImages.squeeze(dim=0)
+        print(dinamycImages.size()) #torch.Size([ndi, ch, h, w])
         return dinamycImages, label, vid_name
 
         #####################################################################################################################################

@@ -157,6 +157,7 @@ def __main__():
     parser.add_argument("--joinType", type=str, default="tempMaxPool", help="show prints")
     parser.add_argument("--foldsNumber", type=int, default=5)
     parser.add_argument("--salModelFile", type=str, default='')
+    parser.add_argument("--numWorkers", type=int, default=4)
 
     args = parser.parse_args()
     dataset = args.dataset
@@ -178,7 +179,7 @@ def __main__():
     debugg_mode = False
     avgmaxDuration = 1.66
     interval_duration = 0.3
-    num_workers = 4
+    num_workers = args.numWorkers
     input_size = 224
     salModelFile = args.salModelFile
 

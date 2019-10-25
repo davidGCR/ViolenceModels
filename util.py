@@ -6,8 +6,15 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
-def get_model_name(modelType, scheduler_type, numDiPerVideos, dataset_source, feature_extract, joinType):
-    model_name = str(modelType) + '-' + dataset_source + '-Finetuned:' + str(not feature_extract) + '-' + str(numDiPerVideos) + 'di-' + joinType + '-' + scheduler_type
+def print_dataset_balance(train_y, test_y):
+    tx, ty = np.array(train_y), np.array(test_y)
+    unique, counts = np.unique(tx, return_counts=True)
+    print('train_balance: ', dict(zip(unique, counts)))
+    unique, counts = np.unique(ty, return_counts=True)
+    print('test_balance: ', dict(zip(unique, counts)))
+
+def get_model_name(modelType, scheduler_type, numDiPerVideos, dataset_source, feature_extract, joinType,num_epochs):
+    model_name = str(modelType) + '_' + dataset_source + '_Finetuned-' + str(not feature_extract) + '-' +'_di-'+str(numDiPerVideos) + '_fusionType-'+joinType +'_num_epochs-' +str(num_epochs)
     return model_name
     
 def save_checkpoint(state, path):

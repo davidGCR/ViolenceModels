@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 
 class Trainer:
-    def __init__(self, model, dataloaders, criterion, optimizer, scheduler, device, num_epochs, checkpoint_path, numDynamicImages):
+    def __init__(self, model, dataloaders, criterion, optimizer, scheduler, device, num_epochs, checkpoint_path, numDynamicImage, plot_samples=False):
         self.model = model
         # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet, inception]
         # self.model_name = "alexnet"
@@ -30,7 +30,8 @@ class Trainer:
         self.checkpoint_path = checkpoint_path
         self.best_model_wts = copy.deepcopy(model.state_dict())
         self.best_acc = 0.0
-        self.numDynamicImages = numDynamicImages
+        self.numDynamicImages = numDynamicImage
+        self.plot_samples = plot_samples
 
     def train_epoch(self, epoch):
         # self.scheduler.step(epoch)
@@ -42,40 +43,29 @@ class Trainer:
         # Iterate over data.
         for inputs, labels, video_names in tqdm(self.dataloaders["train"]): #inputs, labels:  <class 'torch.Tensor'> torch.Size([64, 3, 224, 224]) <class 'torch.Tensor'> torch.Size([64])
             # print('inputs, labels: ',type(inputs),inputs.size(), type(labels), labels.size())
-            # images = torchvision.utils.make_grid(inputs.cpu().data, padding=padding)
-            # imshow(images)
+            if self.plot_samples:
+                print(video_names)
+                images = torchvision.utils.make_grid(inputs.cpu().data, padding=padding)
+                imshow(images)
             if self.numDynamicImages > 1:
                 # print('==== dataloader size: ',inputs.size()) #[batch, ndi, ch, h, w]
                 inputs = inputs.permute(1, 0, 2, 3, 4)
+            # inputs = inputs.permute(1, 0, 2, 3, 4)
             inputs = inputs.to(self.device)
             labels = labels.to(self.device)
             # zero the parameter gradients
             self.optimizer.zero_grad()
             # track history if only in train
-            with torch.set_grad_enabled(True):
-                # Get model outputs and calculate loss
-                # Special case for inception because in training it has an auxiliary output. In train
-                #   mode we calculate the loss by summing the final output and the auxiliary output
-                #   but in testing we only consider the final output.
-                # if is_inception:
-                #     outputs, aux_outputs = self.model(inputs)
-                #     loss1 = self.criterion(outputs, labels)
-                #     loss2 = self.criterion(aux_outputs, labels)
-                #     loss = loss1 + 0.4 * loss2
-                # else:
-                    
+            with torch.set_grad_enabled(True):    
                 outputs = self.model(inputs)
-                # print('-- outputs size: ', outputs.size())
-                # print('-- labels size: ',labels.size())
+                # print('-- outputs size: ', outputs.size(), outputs)
+                # print('-- labels size: ',labels.size(), labels)
                 loss = self.criterion(outputs, labels)
-
                 _, preds = torch.max(outputs, 1)
                 # backward + optimize only if in training phase
-
                 loss.backward()
                 self.optimizer.step()
                 # self.scheduler.step(epoch)
-
             # statistics
             running_loss += loss.item() * inputs.size(0)
             running_corrects += torch.sum(preds == labels.data)
