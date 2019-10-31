@@ -1,6 +1,6 @@
 import sys
 sys.path.insert(1, '/media/david/datos/PAPERS-SOURCE_CODE/MyCode')
-from anomaly_dataset import AnomalyDataset
+import anomaly_dataset
 import os
 import re
 from util import video2Images2, saveList, get_model_name
@@ -9,11 +9,11 @@ import pandas as pd
 import numpy as np
 import cv2
 from ViolenceDatasetV2 import ViolenceDatasetVideos
-from transforms import createTransforms
 import torch.nn as nn
 import torch
 from initializeModel import initialize_model
 from parameters import verifiParametersToTrain
+import transforms_anomaly
 import torch.optim as optim
 from torch.optim import lr_scheduler
 from trainer import Trainer
@@ -71,32 +71,6 @@ def cutVideo(path):
 
 # def plotTemporalDetection(video_path, annotation_txt='/media/david/datos/Violence DATA/AnomalyCRIME/Temporal_Anomaly_Annotation_for_Testing_Videos.txt'):
     
-    
-
-def plotBoundingBox(video_path, bdx_file_path):
-    data = []
-    with open(bdx_file_path, 'r') as file:
-        for row in file:
-            data.append(row.split())
-    data = np.array(data)
-    # print(data.shape)
-    # print(data[:, 5])
-    vid = cv2.VideoCapture(video_path)
-    index_frame = 0
-    while(True):
-        ret, frame = vid.read()
-        if not ret:
-            print('Houston there is a problem...')
-            break
-        index_frame += 1
-        
-        if index_frame < data.shape[0]:
-            if int(data[index_frame,6]) == 0:
-                frame = cv2.rectangle(frame, (int(data[index_frame, 1]), int(data[index_frame, 2])), (int(data[index_frame, 3]), int(data[index_frame, 4])), (0, 255, 0))
-                cv2.putText(frame,str(index_frame),(int(data[index_frame, 1]), int(data[index_frame, 2])), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),1,cv2.LINE_AA)
-        cv2.imshow('frame',frame)
-        if cv2.waitKey(50) & 0xFF == ord('q'):
-            break
         
 def createAnomalyDataset(path_frames):
     Dataset = []    
@@ -111,25 +85,7 @@ def createAnomalyDataset(path_frames):
     NumFrames = [len(glob.glob1(os.path.join(path_frames, names[i]), "*.jpg")) for i in range(len(Dataset))]
     return Dataset, labels_int, NumFrames
         
-def train_test_videos(train_file, test_file, g_path):
-    train_names = []
-    train_labels = []
-    test_names = []
-    test_labes = []
-    classes = {'Normal_Videos': 0, 'Arrest': 1, 'Assault': 2, 'Burglary': 3, 'Robbery': 4, 'Stealing': 5, 'Vandalism': 6}
-    with open(train_file, 'r') as file:
-        for row in file:
-            train_names.append(os.path.join(g_path,row[:-1]))
-            train_labels.append(row[:-4])
 
-    with open(test_file, 'r') as file:
-        for row in file:
-            test_names.append(os.path.join(g_path,row[:-1]))
-            test_labes.append(row[:-4])
-    
-    train_labels = [classes[label] for label in train_labels]
-    test_labes = [classes[label] for label in test_labes]
-    return train_names, train_labels, test_names, test_labes
 
 def test_loader(dataloaders):
     #     inputs :  <class 'list'> 5
@@ -229,20 +185,6 @@ def numFramesMean(path=constants.PATH_UCFCRIME2LOCAL_FRAMES_REDUCED):
     avg = int(total / total_videos) #385
     print(avg)
 
-def __main_plot__():
-    # file_anomaly_train = 'AnomalyCrime/anomaly_videos_train.txt'
-    # file_anomaly_test = 'AnomalyCrime/anomaly_videos_test.txt'
-    # data = []
-    # with open(file_anomaly_train, 'r') as file:
-    #     for row in file:
-    #         data.append(row[:-1])
-    # print(len(data), data)
-    # for video in data:
-    video = 'Arrest002'
-    print('*'*20, video)
-    plotBoundingBox(constants.PATH_UCFCRIME2LOCAL_VIDEOS +'/'+ str(video) + '_x264.mp4',
-                    constants.PATH_UCFCRIME2LOCAL_README +'/Txt annotations/'+str(video)+'.txt')
-
 def __main__():
     # print(train_names)
     # print(train_labels)
@@ -250,8 +192,8 @@ def __main__():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--pathDataset", type=str, default=constants.PATH_UCFCRIME2LOCAL_FRAMES_REDUCED, help="Directory containing results")
-    parser.add_argument("--pathLearningCurves", type=str, default=constants.PATH_ANOMALY_LEARNING_CURVES, help="Directory containing results")
-    parser.add_argument("--checkpointPath", type=str, default=constants.PATH_ANOMALY_CHECKPOINTS)
+    parser.add_argument("--pathLearningCurves", type=str, default=constants.ANOMALY_PATH_LEARNING_CURVES, help="Directory containing results")
+    parser.add_argument("--checkpointPath", type=str, default=constants.ANOMALY_PATH_CHECKPOINTS)
     parser.add_argument("--modelType",type=str,default="alexnet",help="model")
     parser.add_argument("--numEpochs",type=int,default=30)
     parser.add_argument("--batchSize",type=int,default=64)
@@ -261,7 +203,11 @@ def __main__():
     parser.add_argument("--ndis", type=int, help="num dyn imgs")
     parser.add_argument("--joinType", type=str, default="tempMaxPool", help="show prints")
     parser.add_argument("--plotSamples", type=lambda x: (str(x).lower() == 'true'), default=False)
+    parser.add_argument("--shuffle", type=lambda x: (str(x).lower() == 'true'), default=False)
     parser.add_argument("--numWorkers", type=int, default=4)
+    parser.add_argument("--maxNumFramesOnVideo", type=int, default=0)
+    parser.add_argument("--videoSegmentLength", type=int, default=0)
+    parser.add_argument("--positionSegment", type=str, default='random')
 
     args = parser.parse_args()
     path_dataset = args.pathDataset
@@ -276,48 +222,61 @@ def __main__():
     numDiPerVideos = args.ndis
     path_checkpoints = args.checkpointPath
     plot_samples = args.plotSamples
+    shuffle = args.shuffle
     dataset_source = "frames"
     debugg_mode = False
     avgmaxDuration = 1.66
     interval_duration = 0.3
     num_workers = args.numWorkers
     input_size = 224
-    numFrames = 0
+    maxNumFramesOnVideo = args.maxNumFramesOnVideo
+    videoSegmentLength = args.videoSegmentLength
+    positionSegment = args.positionSegment
+    additional_info = '_videoSegmentLength-'+str(videoSegmentLength)+'_positionSegment-'+str(positionSegment)
 
-    transforms = createTransforms(input_size)
+    transforms = transforms_anomaly.createTransforms(input_size)
     num_classes = 7 #{'Normal_Videos': 0, 'Arrest': 1, 'Assault': 2, 'Burglary': 3, 'Robbery': 4, 'Stealing': 5, 'Vandalism': 6}
 
     train_videos_path = os.path.join(constants.PATH_UCFCRIME2LOCAL_README, 'Train_split_AD.txt')
     test_videos_path = os.path.join(constants.PATH_UCFCRIME2LOCAL_README, 'Test_split_AD.txt')
     
-    train_names, train_labels, test_names, test_labels = train_test_videos(train_videos_path, test_videos_path, path_dataset)
-    combined = list(zip(train_names, train_labels))
+    train_names, train_labels, train_num_frames, test_names, test_labels, test_num_frames = anomaly_dataset.train_test_videos(train_videos_path, test_videos_path, path_dataset)
+    count_train = np.array(train_num_frames)
+    count_train = count_train[count_train<40]
+    count_test = np.array(test_num_frames)
+    count_test = count_test[count_test<40] 
+    # print('menores: ', count_train)
+    # print('menores: ', count_test)
+
+    combined = list(zip(train_names, train_labels, train_num_frames))
     random.shuffle(combined)
-    train_names[:], train_labels[:] = zip(*combined)
-    combined = list(zip(test_names, test_labels))
+    train_names[:], train_labels[:], train_num_frames = zip(*combined)
+    combined = list(zip(test_names, test_labels, test_num_frames))
     random.shuffle(combined)
-    test_names[:], test_labels[:] = zip(*combined)
-    print(len(train_names), len(train_labels), len(test_names), len(test_labels))
+    test_names[:], test_labels[:], test_num_frames = zip(*combined)
+    print(len(train_names), len(train_labels), len(train_num_frames), len(test_names), len(test_labels), len(test_num_frames))
     util.print_dataset_balance(train_labels,test_labels)
 
     # dataset, labels, spatial_transform, source='frames', interval_duration=0.0, nDynamicImages=0, debugg_mode = False
     image_datasets = {
-        "train": AnomalyDataset( dataset=train_names, labels=train_labels, spatial_transform=transforms["train"], source=dataset_source,
-            numFrames=numFrames, nDynamicImages=numDiPerVideos, debugg_mode=debugg_mode, sequenceLength=40),
-        "test": AnomalyDataset( dataset=test_names, labels=test_labels, spatial_transform=transforms["test"], source=dataset_source,
-            numFrames=numFrames, nDynamicImages=numDiPerVideos, debugg_mode=debugg_mode, sequenceLength=40)
+        "train": anomaly_dataset.AnomalyDataset( dataset=train_names, labels=train_labels, numFrames=train_num_frames, spatial_transform=transforms["train"], source=dataset_source,
+             nDynamicImages=numDiPerVideos, maxNumFramesOnVideo=maxNumFramesOnVideo, videoSegmentLength=videoSegmentLength, positionSegment=positionSegment),
+        "test": anomaly_dataset.AnomalyDataset( dataset=test_names, labels=test_labels, numFrames=test_num_frames, spatial_transform=transforms["test"], source=dataset_source,
+             nDynamicImages=numDiPerVideos, maxNumFramesOnVideo=maxNumFramesOnVideo, videoSegmentLength=videoSegmentLength, positionSegment=positionSegment)
     }
     dataloaders_dict = {
-        "train": torch.utils.data.DataLoader( image_datasets["train"], batch_size=batch_size, shuffle=True, num_workers=num_workers),
-        "test": torch.utils.data.DataLoader( image_datasets["test"], batch_size=batch_size, shuffle=True, num_workers=num_workers),
+        "train": torch.utils.data.DataLoader( image_datasets["train"], batch_size=batch_size, shuffle=shuffle, num_workers=num_workers),
+        "test": torch.utils.data.DataLoader( image_datasets["test"], batch_size=batch_size, shuffle=shuffle, num_workers=num_workers),
     }
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     # # test_loader(dataloaders_dict)
 
     model, input_size = initialize_model( model_name=modelType, num_classes=num_classes, feature_extract=feature_extract, numDiPerVideos=numDiPerVideos, joinType=joinType, use_pretrained=True)
+    print(model)
     model.to(device)
     MODEL_NAME = util.get_model_name(modelType, scheduler_type, numDiPerVideos, dataset_source, feature_extract, joinType, num_epochs)
+    MODEL_NAME += additional_info
     print(MODEL_NAME)
     params_to_update = verifiParametersToTrain(model, feature_extract)
     # print(model)
@@ -330,7 +289,8 @@ def __main__():
         exp_lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau( optimizer, patience=5, verbose=True )
     criterion = nn.CrossEntropyLoss()
     
-    trainer = Trainer(model, dataloaders_dict, criterion, optimizer, exp_lr_scheduler, device, num_epochs, os.path.join(path_checkpoints,MODEL_NAME),numDiPerVideos, plot_samples)
+    trainer = Trainer(model, dataloaders_dict, criterion, optimizer, exp_lr_scheduler, device, num_epochs,
+                        os.path.join(path_checkpoints,MODEL_NAME),numDiPerVideos, plot_samples)
     train_lost = []
     train_acc = []
     test_lost = []
@@ -347,10 +307,10 @@ def __main__():
         test_acc.append(epoch_acc_test)
     
     print("saving loss and acc history...")
-    util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+"-train_lost.txt"), train_lost)
-    util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+"-train_acc.txt"), train_acc)
-    util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+"-test_lost.txt"), test_lost)
-    util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+"-test_acc.txt"),test_acc)
+    util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+additional_info+"-train_lost.txt"), train_lost)
+    util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+additional_info+"-train_acc.txt"), train_acc)
+    util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+additional_info+"-test_lost.txt"), test_lost)
+    util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+additional_info+"-test_acc.txt"),test_acc)
     # print("saving loss and acc history...")
     # saveList(path_results, modelType, scheduler_type, "train_lost", numDiPerVideos, dataset_source, feature_extract, joinType, train_lost,)
     # saveList(path_results, modelType, scheduler_type,"train_acc",numDiPerVideos, dataset_source, feature_extract, joinType, train_acc, )

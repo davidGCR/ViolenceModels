@@ -23,10 +23,11 @@ def save_checkpoint(state, path):
 
 
 
-def imshow(img):
+def imshow(img, title):
     img = img / 2 + 0.5    
     npimg = img.numpy()
     plt.imshow(np.transpose(npimg, (1, 2, 0)))
+    plt.title(title)
     plt.show()
 
 def set_parameter_requires_grad(model, feature_extracting):

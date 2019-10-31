@@ -6,7 +6,7 @@ import cv2
 import torch
 import glob
 import time
-from dinamycImage import *
+from dynamicImage import *
 
 
 class MaskDataset(Dataset):
