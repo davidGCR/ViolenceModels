@@ -25,17 +25,7 @@ def load_checkpoint(net,optimizer,filename='small.pth.tar'):
     optimizer.load_state_dict(checkpoint['optimizer'])
     return net,optimizer
 
-# def init_anomaly(batch_size, num_workers, maxNumFramesOnVideo, transforms, numDiPerVideos, avgmaxDuration, dataset_source, shuffle, videoSegmentLength, positionSegment):
-#     train_names, train_labels, NumFrames_train, test_names, test_labes, NumFrames_test = anomaly_dataset.train_test_videos(constants.ANOMALY_PATH_TRAIN_SPLIT, constants.ANOMALY_PATH_TEST_SPLIT, constants.PATH_UCFCRIME2LOCAL_FRAMES_REDUCED)
-#     print(len(train_names), len(test_names))
-#     image_datasets = {
-#         "train": anomaly_dataset.AnomalyDataset( dataset=train_names, labels=train_labels, numFrames=NumFrames_train, spatial_transform=transforms["train"], source=dataset_source,
-#              nDynamicImages=numDiPerVideos, maxNumFramesOnVideo=maxNumFramesOnVideo, videoSegmentLength=videoSegmentLength, positionSegment=positionSegment),
-#     }
-#     dataloaders_dict = {
-#         "train": torch.utils.data.DataLoader( image_datasets["train"], batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, ),
-#     }
-#     return image_datasets, dataloaders_dict
+
 
 
 def train(num_classes, num_epochs, regularizers, device, checkpoint_path, dataloaders_dict, black_box_file, numDynamicImages=0):
