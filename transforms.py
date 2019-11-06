@@ -23,6 +23,15 @@ def createTransforms(input_size):
                 # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
             ]
         ),
+         "val": transforms.Compose(
+            [
+                transforms.Resize(input_size),
+                transforms.CenterCrop(input_size),
+                transforms.ToTensor(),
+                transforms.Normalize([0.4770381, 0.4767955, 0.4773611], [0.11147115, 0.11427314, 0.11617025])
+                # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            ]
+        ),
         "test": transforms.Compose(
             [
                 transforms.Resize(input_size),

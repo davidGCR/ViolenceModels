@@ -20,5 +20,9 @@ ANOMALY_PATH_CHECKPOINTS = 'AnomalyCrime/checkpoints'
 ANOMALY_PATH_LEARNING_CURVES = 'AnomalyCrime/learning_curves'
 ANOMALY_PATH_TRAIN_SPLIT = os.path.join(PATH_UCFCRIME2LOCAL_README, 'Train_split_AD.txt')
 ANOMALY_PATH_TEST_SPLIT = os.path.join(PATH_UCFCRIME2LOCAL_README, 'Test_split_AD.txt')
-ANOMALY_PATH_SALIENCY_MODELS = 'saliencyModels/anomaly'
-ANOMALY_PATH_BLACK_BOX_MODELS = 'BlackBoxModels/anomaly'
+ANOMALY_PATH_SALIENCY_MODELS = 'Saliency/Models/anomaly'
+ANOMALY_PATH_BLACK_BOX_MODELS = 'Saliency/BlackBoxModels/anomaly'
+
+OPERATION_TRAINING = 'training'
+OPERATION_TRAINING_FINAL = 'trainingFinal'
+OPERATION_TESTING = 'testing'

@@ -111,16 +111,26 @@ class AnomalyDataset(Dataset):
         dinamycImages = torch.stack(dinamycImages, dim=0)
         if self.nDynamicImages == 1:
             dinamycImages = dinamycImages.squeeze(dim=0)
-        # print(dinamycImages.size()) #torch.Size([ndi, ch, h, w])
+            # print(dinamycImages.size()) #torch.Size([ndi, ch, h, w])
         return dinamycImages, label, vid_name
 
         #####################################################################################################################################
 
+def labels_2_binary(multi_labels):
+    binary_labels = multi_labels.copy()
+    for idx,label in enumerate(multi_labels):
+        if label == 0:
+            binary_labels[idx]=0
+        else:
+            binary_labels[idx]=1
+    return binary_labels
+
 def train_test_videos(train_file, test_file, g_path):
+    """ load train-test split from original dataset """
     train_names = []
     train_labels = []
     test_names = []
-    test_labes = []
+    test_labels = []
     classes = {'Normal_Videos': 0, 'Arrest': 1, 'Assault': 2, 'Burglary': 3, 'Robbery': 4, 'Stealing': 5, 'Vandalism': 6}
     with open(train_file, 'r') as file:
         for row in file:
@@ -130,15 +140,24 @@ def train_test_videos(train_file, test_file, g_path):
     with open(test_file, 'r') as file:
         for row in file:
             test_names.append(os.path.join(g_path,row[:-1]))
-            test_labes.append(row[:-4])
-    
+            test_labels.append(row[:-4])
+    # for idx,label in enumerate(train_labels):
+    #     if label == 'Normal_Videos':
+    #         train_labels[idx]=0
+    #     else:
+    #         train_labels[idx]=1
+    # for idx,label in enumerate(test_labels):
+    #     if label == 'Normal_Videos':
+    #         test_labels[idx]=0
+    #     else:
+    #         test_labels[idx]=1       
     train_labels = [classes[label] for label in train_labels]
-    test_labes = [classes[label] for label in test_labes]
+    test_labels = [classes[label] for label in test_labels]
     # for i in range(len(train_names)):
     #      print(train_names[i])
     NumFrames_train = [len(glob.glob1(train_names[i], "*.jpg")) for i in range(len(train_names))]
     NumFrames_test = [len(glob.glob1(test_names[i], "*.jpg")) for i in range(len(test_names))]
-    return train_names, train_labels, NumFrames_train, test_names, test_labes, NumFrames_test
+    return train_names, train_labels, NumFrames_train, test_names, test_labels, NumFrames_test
 
 
 

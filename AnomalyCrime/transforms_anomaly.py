@@ -1,6 +1,5 @@
 import torchvision.transforms as transforms
 import numpy as np
-from initialize_dataset import createDataset, getDataLoader
 from tqdm import tqdm
 import constants
 import AnomalyCrime.anomaly_dataset as anomaly_dataset
@@ -14,13 +13,22 @@ def createTransforms(input_size):
     data_transforms = {
         "train": transforms.Compose(
             [
-                transforms.Resize(input_size),
-                transforms.CenterCrop(input_size),
-                # transforms.RandomResizedCrop(input_size),
-                # transforms.RandomHorizontalFlip(),
+                # transforms.Resize(input_size),
+                # transforms.CenterCrop(input_size),
+                transforms.RandomResizedCrop(input_size),
+                transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
                 transforms.Normalize([0.49237782, 0.49160805, 0.48998737], [0.11053326, 0.11088469, 0.11275752] )
                 # [0.49237782 0.49160805 0.48998737] [0.11053326 0.11088469 0.11275752] [0.11053331 0.11088473 0.11275754]
+                # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            ]
+        ),
+        "val": transforms.Compose(
+            [
+                transforms.Resize(input_size),
+                transforms.CenterCrop(input_size),
+                transforms.ToTensor(),
+                transforms.Normalize([0.49237782, 0.49160805, 0.48998737], [0.11053326, 0.11088469, 0.11275752] )
                 # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
             ]
         ),
@@ -32,7 +40,7 @@ def createTransforms(input_size):
                 transforms.Normalize([0.49237782, 0.49160805, 0.48998737], [0.11053326, 0.11088469, 0.11275752] )
                 # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
             ]
-        ),
+        )
     }
     return data_transforms
 

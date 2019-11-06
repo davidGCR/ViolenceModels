@@ -28,7 +28,7 @@ def load_checkpoint(net,optimizer,filename='small.pth.tar'):
 
 
 
-def train(num_classes, num_epochs, regularizers, device, checkpoint_path, dataloaders_dict, black_box_file, numDynamicImages=0):
+def train(black_box_model, num_classes, num_epochs, regularizers, device, checkpoint_path, dataloaders_dict, black_box_file, numDynamicImages=0):
     # trainloader,testloader,classes = cifar10()
     net = saliencyModel.build_saliency_model(num_classes=num_classes)
     net = net.cuda()
@@ -42,8 +42,8 @@ def train(num_classes, num_epochs, regularizers, device, checkpoint_path, datalo
     # elif scheduler_type == "OnPlateau":
     #     exp_lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, verbose=True)
                 
-    black_box_func = torch.load(black_box_file)
-    black_box_func = black_box_func.cuda()
+    black_box_model = torch.load(black_box_file)
+    black_box_model = black_box_model.cuda()
     loss_func = Loss(num_classes=num_classes, regularizers=regularizers)
     best_loss = 1000.0
     for epoch in range(num_epochs):  # loop over the dataset multiple times
@@ -73,7 +73,7 @@ def train(num_classes, num_epochs, regularizers, device, checkpoint_path, datalo
             # print(labels)
 
             # inputs_r = Variable(inputs_r.cuda())
-            loss = loss_func.get(mask,inputs,labels,black_box_func)
+            loss = loss_func.get(mask,inputs,labels,black_box_model)
             # running_loss += loss.data[0]
             running_loss += loss.item()
             running_loss_train += loss.item()*inputs.size(0)

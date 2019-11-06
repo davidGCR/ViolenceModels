@@ -71,8 +71,8 @@ def plotScalarCombined(trainlist,testlist, tepochs,title, ylabel, fig2, rows, co
 def plot_results(path, lastEpoch, nfolds):
     train_lost = loadList(str(path)+'-train_lost.txt')
     train_acc = loadList(str(path)+'-train_acc.txt')
-    test_lost = loadList(str(path)+'-test_lost.txt')
-    test_acc = loadList(str(path)+'-test_acc.txt')
+    test_lost = loadList(str(path)+'-val_lost.txt')
+    test_acc = loadList(str(path)+'-val_acc.txt')
 
     num_epochs = int(len(train_lost)/nfolds)
     # num_epochs = 30
@@ -104,7 +104,7 @@ def plot_results(path, lastEpoch, nfolds):
 
     # plt.axvline(x=lastEpoch, color='g', linestyle='--')
     
-    plt.text(-5.0, 0.5, 'Accuracy: '+str(acc), horizontalalignment='center', verticalalignment='center',
+    plt.text(-5.0, 0.1, 'Accuracy: '+str(acc), horizontalalignment='center', verticalalignment='center',
           bbox=dict(boxstyle="square",
               ec=(1., 0.5, 0.5),
               fc=(1., 0.8, 0.8),))

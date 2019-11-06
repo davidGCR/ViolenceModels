@@ -11,13 +11,12 @@ class ViolenceModelResNet(nn.Module):
         self.numDiPerVideos = numDiPerVideos
         self.num_classes = num_classes
         self.joinType = joinType
+        self.model_ft = None
         if model_name == 'resnet18':
             self.model_ft = models.resnet18(pretrained=True)
-
         elif model_name == 'resnet34':
             self.model_ft = models.resnet34(pretrained=True)
         self.num_ftrs = self.model_ft.fc.in_features
-        
         self.model_ft.fc = Identity()
         self.convLayers = nn.Sequential(*list(self.model_ft.children())[:-2]) # to tempooling
 
@@ -36,7 +35,7 @@ class ViolenceModelResNet(nn.Module):
             x = self.model_ft(x)
             x = torch.flatten(x, 1)
             # print('x: ',x.size())
-        else:
+        else: ##torch.Size([8, 1, 3, 224, 224])
             if self.joinType == 'cat':
                 x = self.getFeatureVectorCat(x)
                 # print('cat input size:',x.size())
@@ -70,6 +69,8 @@ class ViolenceModelResNet(nn.Module):
         return feature
 
     def getFeatureVectorTempPool(self, x):
+        # loss #torch.Size([8, 1, 3, 224, 224])
+        print('input tempPool: ', x.size())
         lista = []
         seqLen = self.numDiPerVideos
         # print(seqLen)
@@ -84,10 +85,13 @@ class ViolenceModelResNet(nn.Module):
         lista_minibatch = []
         for idx in range(minibatch.size()[0]):
             out = tempMaxPooling(minibatch[idx], tmppool)
+            print('tempMaxPooling output: ', out.size())
             lista_minibatch.append(out)
 
         feature = torch.stack(lista_minibatch, 0)
         feature = torch.flatten(feature, 1)
+
+        print('input tempPool output: ', feature.size())
         return feature
     
     def getFeatureVectorCat(self, x):

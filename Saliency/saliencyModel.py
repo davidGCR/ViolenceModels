@@ -94,7 +94,7 @@ class SaliencyModel(nn.Module):
         
         self.embedding = nn.Embedding(num_classes,512)
         # self.linear = nn.Linear(512*block.expansion, num_classes)
-        self.linear = nn.Linear(512*7*7, num_classes)
+        self.linear = nn.Linear(512*7*7, num_classes) #to alexnet
         # self.linear = nn.Linear(512, num_classes)
         self.saliency_chans = nn.Conv2d(64,2,kernel_size=1,bias=False)
 
@@ -116,7 +116,7 @@ class SaliencyModel(nn.Module):
         out = self.bn1(out)
         # print('=> out bn1:', out.size())
         out = F.relu(out)
-        # out = F.relu(self.bn1(self.conv1(x)))
+        # # out = F.relu(self.bn1(self.conv1(x)))
         # print('=> out relu:', out.size())
         
         scale1 = self.layer1(out)

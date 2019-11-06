@@ -7,8 +7,6 @@ from util import video2Images2, saveList, get_model_name
 import csv
 import pandas as pd
 import numpy as np
-import cv2
-from ViolenceDatasetV2 import ViolenceDatasetVideos
 import torch.nn as nn
 import torch
 from initializeModel import initialize_model
@@ -19,10 +17,154 @@ from torch.optim import lr_scheduler
 from trainer import Trainer
 import random
 import util
-import initialize_dataset
+# import initializeDataset
 import constants
 import glob
 import argparse
+import anomaly_initializeDataset
+from tester import Tester
+from sklearn.metrics import roc_auc_score
+
+def testing(model, dataloaders, device, numDiPerVideos, plot_samples):
+    tester = Tester(model, dataloaders, device, numDiPerVideos, plot_samples)
+    gt_labels, predictions = tester.test_model()
+    print(gt_labels)
+    print(predictions)
+    auc = roc_auc_score(gt_labels, predictions)
+    print(auc)
+    return auc
+
+def training(modelType, num_classes, feature_extract, numDiPerVideos, joinType, device, additional_info, path_learning_curves, 
+                scheduler_type, dataset_source, num_epochs, dataloaders_dict, path_checkpoints, plot_samples, operation):
+    model, input_size = initialize_model( model_name=modelType, num_classes=num_classes, feature_extract=feature_extract, numDiPerVideos=numDiPerVideos, joinType=joinType, use_pretrained=True)
+    # print(model)
+    model.to(device)
+    MODEL_NAME = util.get_model_name(modelType, scheduler_type, numDiPerVideos, dataset_source, feature_extract, joinType, num_epochs)
+    MODEL_NAME += additional_info
+    MODEL_NAME = MODEL_NAME+'-FINAL' if operation == constants.OPERATION_TRAINING_FINAL else MODEL_NAME
+    print(MODEL_NAME)
+
+    params_to_update = verifiParametersToTrain(model, feature_extract)
+    optimizer = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
+    # Decay LR by a factor of 0.1 every 7 epochs
+    if scheduler_type == "StepLR":
+        exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+    elif scheduler_type == "OnPlateau":
+        exp_lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau( optimizer, patience=5, verbose=True )
+    criterion = nn.CrossEntropyLoss()
+    
+
+    trainer = Trainer(model, dataloaders_dict, criterion, optimizer, exp_lr_scheduler, device, num_epochs,
+                       os.path.join(path_checkpoints,MODEL_NAME), numDiPerVideos, plot_samples, operation)
+    train_lost = []
+    train_acc = []
+    val_lost = []
+    val_acc = []
+    for epoch in range(1, num_epochs + 1):
+        print("----- Epoch {}/{}".format(epoch, num_epochs))
+        # Train and evaluate
+        if operation == constants.OPERATION_TRAINING_FINAL:
+            epoch_loss_train, epoch_acc_train = trainer.train_epoch(epoch)
+            train_lost.append(epoch_loss_train)
+            train_acc.append(epoch_acc_train)
+            exp_lr_scheduler.step(epoch_loss_train)
+            
+
+        elif operation == constants.OPERATION_TRAINING:
+            epoch_loss_train, epoch_acc_train = trainer.train_epoch(epoch)
+            train_lost.append(epoch_loss_train)
+            train_acc.append(epoch_acc_train)
+            epoch_loss_val, epoch_acc_val = trainer.val_epoch(epoch)
+            exp_lr_scheduler.step(epoch_loss_val)
+            val_lost.append(epoch_loss_val)
+            val_acc.append(epoch_acc_val)
+    
+    print("saving loss and acc history...")
+    if operation == 'trainingFinal':
+        util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+"-train_lost.txt"), train_lost)
+        util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+"-train_acc.txt"), train_acc)
+    elif operation == 'training':
+        util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+"-train_lost.txt"), train_lost)
+        util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+"-train_acc.txt"), train_acc)
+        util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+"-val_lost.txt"), val_lost)
+        util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+"-val_acc.txt"),val_acc)
+
+
+def __main__():
+    # print(train_names)
+    # print(train_labels)
+    # print(len(train_names), len(test_names))
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--operation", type=str)
+    parser.add_argument("--testModelFile", type=str, default=None)
+
+    parser.add_argument("--pathDataset", type=str, default=constants.PATH_UCFCRIME2LOCAL_FRAMES_REDUCED, help="Directory containing results")
+    parser.add_argument("--pathLearningCurves", type=str, default=constants.ANOMALY_PATH_LEARNING_CURVES, help="Directory containing results")
+    parser.add_argument("--checkpointPath", type=str, default=constants.ANOMALY_PATH_CHECKPOINTS)
+    parser.add_argument("--modelType",type=str,default="alexnet",help="model")
+    parser.add_argument("--numEpochs",type=int,default=30)
+    parser.add_argument("--batchSize",type=int,default=64)
+    parser.add_argument("--featureExtract",type=lambda x: (str(x).lower() == 'true'), default=False, help="to fine tunning")
+    parser.add_argument("--schedulerType",type=str,default="OnPlateau",help="learning rate scheduler")
+    parser.add_argument("--debuggMode", type=bool, default=False, help="show prints")
+    parser.add_argument("--ndis", type=int, help="num dyn imgs")
+    parser.add_argument("--joinType", type=str, default="tempMaxPool", help="show prints")
+    parser.add_argument("--plotSamples", type=lambda x: (str(x).lower() == 'true'), default=False)
+    parser.add_argument("--shuffle", type=lambda x: (str(x).lower() == 'true'), default=False)
+    parser.add_argument("--numWorkers", type=int, default=4)
+    parser.add_argument("--maxNumFramesOnVideo", type=int, default=0)
+    parser.add_argument("--videoSegmentLength", type=int, default=0)
+    parser.add_argument("--positionSegment", type=str, default='random')
+
+
+    args = parser.parse_args()
+    operation = args.operation
+    testModelFile = args.testModelFile
+
+    path_dataset = args.pathDataset
+    shuffle = args.shuffle
+    dataset_source = "frames"
+    num_workers = args.numWorkers
+    input_size = 224
+    maxNumFramesOnVideo = args.maxNumFramesOnVideo
+    videoSegmentLength = args.videoSegmentLength
+    positionSegment = args.positionSegment
+    path_learning_curves = args.pathLearningCurves
+    modelType = args.modelType
+    batch_size = args.batchSize
+    num_epochs = args.numEpochs
+    feature_extract = args.featureExtract
+    joinType = args.joinType
+    scheduler_type = args.schedulerType
+    numDiPerVideos = args.ndis
+    path_checkpoints = args.checkpointPath
+    plot_samples = args.plotSamples
+    additional_info = '_videoSegmentLength-'+str(videoSegmentLength)+'_positionSegment-'+str(positionSegment)
+    transforms = transforms_anomaly.createTransforms(input_size)
+    num_classes = 2 #{'Normal_Videos': 0, 'Arrest': 1, 'Assault': 2, 'Burglary': 3, 'Robbery': 4, 'Stealing': 5, 'Vandalism': 6}
+    train_videos_path = os.path.join(constants.PATH_UCFCRIME2LOCAL_README, 'Train_split_AD.txt')
+    test_videos_path = os.path.join(constants.PATH_UCFCRIME2LOCAL_README, 'Test_split_AD.txt')
+    
+    if operation == constants.OPERATION_TRAINING or operation == constants.OPERATION_TESTING:
+        dataloaders_dict, test_names = anomaly_initializeDataset.initialize_train_val_anomaly_dataset(path_dataset, train_videos_path, test_videos_path, dataset_source, batch_size, num_workers,
+                                                            numDiPerVideos, transforms, maxNumFramesOnVideo, videoSegmentLength, positionSegment, shuffle)
+    elif operation == constants.OPERATION_TRAINING_FINAL:
+        dataloaders_dict = anomaly_initializeDataset.initialize_final_anomaly_dataset(path_dataset, train_videos_path, test_videos_path, dataset_source, batch_size, num_workers,
+                                                            numDiPerVideos, transforms, maxNumFramesOnVideo, videoSegmentLength, positionSegment, shuffle)
+
+    
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    if operation == constants.OPERATION_TRAINING or operation == constants.OPERATION_TRAINING_FINAL:
+        training(modelType, num_classes, feature_extract, numDiPerVideos, joinType, device, additional_info, path_learning_curves, 
+                scheduler_type, dataset_source, num_epochs, dataloaders_dict, path_checkpoints, plot_samples,operation)
+    elif operation == constants.OPERATION_TESTING:
+        model = torch.load(testModelFile)
+        testing(model, dataloaders_dict['test'], device, numDiPerVideos, plot_samples)
+    
+
+__main__()
+
 
 def extractMetadata(path='/media/david/datos/Violence DATA/AnomalyCRIME/UCFCrime2Local/videos'):
     paths = os.listdir(path)
@@ -85,8 +227,6 @@ def createAnomalyDataset(path_frames):
     NumFrames = [len(glob.glob1(os.path.join(path_frames, names[i]), "*.jpg")) for i in range(len(Dataset))]
     return Dataset, labels_int, NumFrames
         
-
-
 def test_loader(dataloaders):
     #     inputs :  <class 'list'> 5
     # --> 1 torch.float32 torch.Size([28, 3, 224, 224])
@@ -185,139 +325,3 @@ def numFramesMean(path=constants.PATH_UCFCRIME2LOCAL_FRAMES_REDUCED):
     avg = int(total / total_videos) #385
     print(avg)
 
-def __main__():
-    # print(train_names)
-    # print(train_labels)
-    # print(len(train_names), len(test_names))
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--pathDataset", type=str, default=constants.PATH_UCFCRIME2LOCAL_FRAMES_REDUCED, help="Directory containing results")
-    parser.add_argument("--pathLearningCurves", type=str, default=constants.ANOMALY_PATH_LEARNING_CURVES, help="Directory containing results")
-    parser.add_argument("--checkpointPath", type=str, default=constants.ANOMALY_PATH_CHECKPOINTS)
-    parser.add_argument("--modelType",type=str,default="alexnet",help="model")
-    parser.add_argument("--numEpochs",type=int,default=30)
-    parser.add_argument("--batchSize",type=int,default=64)
-    parser.add_argument("--featureExtract",type=lambda x: (str(x).lower() == 'true'), default=False, help="to fine tunning")
-    parser.add_argument("--schedulerType",type=str,default="OnPlateau",help="learning rate scheduler")
-    parser.add_argument("--debuggMode", type=bool, default=False, help="show prints")
-    parser.add_argument("--ndis", type=int, help="num dyn imgs")
-    parser.add_argument("--joinType", type=str, default="tempMaxPool", help="show prints")
-    parser.add_argument("--plotSamples", type=lambda x: (str(x).lower() == 'true'), default=False)
-    parser.add_argument("--shuffle", type=lambda x: (str(x).lower() == 'true'), default=False)
-    parser.add_argument("--numWorkers", type=int, default=4)
-    parser.add_argument("--maxNumFramesOnVideo", type=int, default=0)
-    parser.add_argument("--videoSegmentLength", type=int, default=0)
-    parser.add_argument("--positionSegment", type=str, default='random')
-
-    args = parser.parse_args()
-    path_dataset = args.pathDataset
-    path_learning_curves = args.pathLearningCurves
-    modelType = args.modelType
-    batch_size = args.batchSize
-    num_epochs = args.numEpochs
-    feature_extract = args.featureExtract
-    joinType = args.joinType
-    scheduler_type = args.schedulerType
-    debugg_mode = args.debuggMode
-    numDiPerVideos = args.ndis
-    path_checkpoints = args.checkpointPath
-    plot_samples = args.plotSamples
-    shuffle = args.shuffle
-    dataset_source = "frames"
-    debugg_mode = False
-    avgmaxDuration = 1.66
-    interval_duration = 0.3
-    num_workers = args.numWorkers
-    input_size = 224
-    maxNumFramesOnVideo = args.maxNumFramesOnVideo
-    videoSegmentLength = args.videoSegmentLength
-    positionSegment = args.positionSegment
-    additional_info = '_videoSegmentLength-'+str(videoSegmentLength)+'_positionSegment-'+str(positionSegment)
-
-    transforms = transforms_anomaly.createTransforms(input_size)
-    num_classes = 7 #{'Normal_Videos': 0, 'Arrest': 1, 'Assault': 2, 'Burglary': 3, 'Robbery': 4, 'Stealing': 5, 'Vandalism': 6}
-
-    train_videos_path = os.path.join(constants.PATH_UCFCRIME2LOCAL_README, 'Train_split_AD.txt')
-    test_videos_path = os.path.join(constants.PATH_UCFCRIME2LOCAL_README, 'Test_split_AD.txt')
-    
-    train_names, train_labels, train_num_frames, test_names, test_labels, test_num_frames = anomaly_dataset.train_test_videos(train_videos_path, test_videos_path, path_dataset)
-    count_train = np.array(train_num_frames)
-    count_train = count_train[count_train<40]
-    count_test = np.array(test_num_frames)
-    count_test = count_test[count_test<40] 
-    # print('menores: ', count_train)
-    # print('menores: ', count_test)
-
-    combined = list(zip(train_names, train_labels, train_num_frames))
-    random.shuffle(combined)
-    train_names[:], train_labels[:], train_num_frames = zip(*combined)
-    combined = list(zip(test_names, test_labels, test_num_frames))
-    random.shuffle(combined)
-    test_names[:], test_labels[:], test_num_frames = zip(*combined)
-    print(len(train_names), len(train_labels), len(train_num_frames), len(test_names), len(test_labels), len(test_num_frames))
-    util.print_dataset_balance(train_labels,test_labels)
-
-    # dataset, labels, spatial_transform, source='frames', interval_duration=0.0, nDynamicImages=0, debugg_mode = False
-    image_datasets = {
-        "train": anomaly_dataset.AnomalyDataset( dataset=train_names, labels=train_labels, numFrames=train_num_frames, spatial_transform=transforms["train"], source=dataset_source,
-             nDynamicImages=numDiPerVideos, maxNumFramesOnVideo=maxNumFramesOnVideo, videoSegmentLength=videoSegmentLength, positionSegment=positionSegment),
-        "test": anomaly_dataset.AnomalyDataset( dataset=test_names, labels=test_labels, numFrames=test_num_frames, spatial_transform=transforms["test"], source=dataset_source,
-             nDynamicImages=numDiPerVideos, maxNumFramesOnVideo=maxNumFramesOnVideo, videoSegmentLength=videoSegmentLength, positionSegment=positionSegment)
-    }
-    dataloaders_dict = {
-        "train": torch.utils.data.DataLoader( image_datasets["train"], batch_size=batch_size, shuffle=shuffle, num_workers=num_workers),
-        "test": torch.utils.data.DataLoader( image_datasets["test"], batch_size=batch_size, shuffle=shuffle, num_workers=num_workers),
-    }
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-    # # test_loader(dataloaders_dict)
-
-    model, input_size = initialize_model( model_name=modelType, num_classes=num_classes, feature_extract=feature_extract, numDiPerVideos=numDiPerVideos, joinType=joinType, use_pretrained=True)
-    print(model)
-    model.to(device)
-    MODEL_NAME = util.get_model_name(modelType, scheduler_type, numDiPerVideos, dataset_source, feature_extract, joinType, num_epochs)
-    MODEL_NAME += additional_info
-    print(MODEL_NAME)
-    params_to_update = verifiParametersToTrain(model, feature_extract)
-    # print(model)
-
-    optimizer = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
-    # Decay LR by a factor of 0.1 every 7 epochs
-    if scheduler_type == "StepLR":
-        exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
-    elif scheduler_type == "OnPlateau":
-        exp_lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau( optimizer, patience=5, verbose=True )
-    criterion = nn.CrossEntropyLoss()
-    
-    trainer = Trainer(model, dataloaders_dict, criterion, optimizer, exp_lr_scheduler, device, num_epochs,
-                        os.path.join(path_checkpoints,MODEL_NAME),numDiPerVideos, plot_samples)
-    train_lost = []
-    train_acc = []
-    test_lost = []
-    test_acc = []
-    for epoch in range(1, num_epochs + 1):
-        print("----- Epoch {}/{}".format(epoch, num_epochs))
-        # Train and evaluate
-        epoch_loss_train, epoch_acc_train = trainer.train_epoch(epoch)
-        epoch_loss_test, epoch_acc_test = trainer.test_epoch(epoch)
-        exp_lr_scheduler.step(epoch_loss_test)
-        train_lost.append(epoch_loss_train)
-        train_acc.append(epoch_acc_train)
-        test_lost.append(epoch_loss_test)
-        test_acc.append(epoch_acc_test)
-    
-    print("saving loss and acc history...")
-    util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+additional_info+"-train_lost.txt"), train_lost)
-    util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+additional_info+"-train_acc.txt"), train_acc)
-    util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+additional_info+"-test_lost.txt"), test_lost)
-    util.saveLearningCurve(os.path.join(path_learning_curves,MODEL_NAME+additional_info+"-test_acc.txt"),test_acc)
-    # print("saving loss and acc history...")
-    # saveList(path_results, modelType, scheduler_type, "train_lost", numDiPerVideos, dataset_source, feature_extract, joinType, train_lost,)
-    # saveList(path_results, modelType, scheduler_type,"train_acc",numDiPerVideos, dataset_source, feature_extract, joinType, train_acc, )
-    # saveList( path_results, modelType, scheduler_type, "test_lost", numDiPerVideos, dataset_source, feature_extract, joinType, test_lost, )
-    # saveList( path_results, modelType, scheduler_type, "test_acc", numDiPerVideos, dataset_source, feature_extract, joinType, test_acc, )
-
-# __main_plot__()
-__main__()
-# numFramesMean()
-# createReducedDataset()
