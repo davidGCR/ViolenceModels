@@ -6,9 +6,9 @@ import torchvision
 from torchvision import datasets, models, transforms
 # from util import set_parameter_requires_grad
 from parameters import set_parameter_requires_grad
-import Models.AlexNet as alexnet
-import Models.ResNet as resnet
-import Models.Vgg as vgg
+import MODELS.AlexNet as alexnet
+import MODELS.ResNet as resnet
+import MODELS.Vgg as vgg
 
 def initialize_model(model_name, num_classes, feature_extract, numDiPerVideos, joinType, use_pretrained=True):
     # Initialize these variables which will be set in this if statement. Each of these

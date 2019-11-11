@@ -2,30 +2,30 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-def tempMaxPooling(stacked_images, tmppool):
-    # stacked_images:  torch.Size([1, 512, 7, 7])
-    # out:  torch.Size([512, 7, 7])
-    # stacked_images:  torch.Size([1, 512, 7, 7])
-    # out:  torch.Size([512, 7, 7])
-    # stacked_images:  torch.Size([1, 512, 7, 7])
-    # out:  torch.Size([512, 7, 7])
-    # stacked_images:  torch.Size([1, 512, 7, 7])
-    # out:  torch.Size([512, 7, 7])
-    spermute = stacked_images.permute(2,3,0,1)
-    out = tmppool(spermute)
-    out = out.permute(2, 3, 0, 1)
-    out = torch.squeeze(out)
-    # print('stacked_images: ', stacked_images.size())
-    # print('out: ',out.size())
-    return out
+# def tempMaxPooling(stacked_images, tmppool):
+#     # stacked_images:  torch.Size([1, 512, 7, 7])
+#     # out:  torch.Size([512, 7, 7])
+#     # stacked_images:  torch.Size([1, 512, 7, 7])
+#     # out:  torch.Size([512, 7, 7])
+#     # stacked_images:  torch.Size([1, 512, 7, 7])
+#     # out:  torch.Size([512, 7, 7])
+#     # stacked_images:  torch.Size([1, 512, 7, 7])
+#     # out:  torch.Size([512, 7, 7])
+#     spermute = stacked_images.permute(2,3,0,1)
+#     out = tmppool(spermute)
+#     out = out.permute(2, 3, 0, 1)
+#     out = torch.squeeze(out)
+#     # print('stacked_images: ', stacked_images.size())
+#     # print('out: ',out.size())
+#     return out
 
-def tempMaxPooling2(stacked_images, tmppool):
-    print('stacked_images: ',stacked_images.size())
-    spermute = stacked_images.permute(2,3,0,1)
-    out = tmppool(spermute)
-    out = out.permute(2, 3, 0, 1)
-    out = torch.squeeze(out)
-    return out
+# def tempMaxPooling2(stacked_images, tmppool):
+#     print('stacked_images: ',stacked_images.size())
+#     spermute = stacked_images.permute(2,3,0,1)
+#     out = tmppool(spermute)
+#     out = out.permute(2, 3, 0, 1)
+#     out = torch.squeeze(out)
+#     return out
 
 # def main():
 #     t1 = torch.tensor(torch.arange(1, 19))

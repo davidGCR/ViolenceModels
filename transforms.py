@@ -1,6 +1,6 @@
 import torchvision.transforms as transforms
 import numpy as np
-from initializeDataset import createDataset, getDataLoader
+from initializeDataset import createDataset
 from tqdm import tqdm
 import constants
 import AnomalyCrime.anomaly_dataset as anomaly_dataset

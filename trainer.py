@@ -62,7 +62,6 @@ class Trainer:
             if self.numDynamicImages > 1:
                 # print('==== dataloader size: ',inputs.size()) #[batch, ndi, ch, h, w]
                 inputs = inputs.permute(1, 0, 2, 3, 4)
-            # inputs = inputs.permute(1, 0, 2, 3, 4)
             inputs = inputs.to(self.device)
             labels = labels.to(self.device)
             # zero the parameter gradients

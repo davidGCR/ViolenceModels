@@ -17,7 +17,8 @@ class Tester:
     def test_model(self):
         self.model.eval()
         gt_labels = []
-        predictions = []
+        predictions = []  #indeicea
+        scores = []
         # Iterate over data.
         for inputs, labels, video_names in tqdm(self.dataloader):
             if self.numDiPerVideos > 1:
@@ -28,11 +29,16 @@ class Tester:
             # self.optimizer.zero_grad()
             with torch.set_grad_enabled(False):
                 outputs = self.model(inputs)
+                p = torch.nn.functional.softmax(outputs, dim=1)
+               
                 # print('-- outputs size: ', outputs.size())
                 # print('-- labels size: ',labels.size())
                 # loss = self.criterion(outputs, labels)
-                _, preds = torch.max(outputs, 1)
-                predictions.extend(preds.cpu().numpy())
+                values, indices = torch.max(outputs, 1)
+                scores.extend(p.cpu().numpy())
+                predictions.extend(indices.cpu().numpy())
                 # print('predictions: ',preds)
+                # p2 = p[:,indices.cpu().numpy()]
+                # print(indices,p,p2)
 
-        return gt_labels, predictions
+        return gt_labels, predictions, scores
