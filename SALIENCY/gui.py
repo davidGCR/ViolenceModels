@@ -82,7 +82,7 @@ def __main__():
     test_videos_path = os.path.join(constants.PATH_UCFCRIME2LOCAL_README, 'Test_split_AD.txt')
     dataloaders_dict, test_names = anomaly_initializeDataset.initialize_final_only_test_anomaly_dataset(path_dataset, train_videos_path, test_videos_path, dataset_source, batch_size,
                                                         num_workers, numDiPerVideos, transforms, maxNumFramesOnVideo, videoSegmentLength, positionSegment, shuffle)
-    tester = saliencyTester.SaliencyTester(saliency_model_file, num_classes,  dataloaders_dict['test'], test_names, input_size, saliency_model_config, numDiPerVideos, threshold)
+    tester =  saliencyTester.SaliencyTester(saliency_model_file, num_classes,  dataloaders_dict['test'], test_names, input_size, saliency_model_config, numDiPerVideos, threshold)
     
     path, label, bbox_infos_frames, num_frames = get_anomalous_video('Burglary048', reduced=True)
     print(path, label, num_frames)
