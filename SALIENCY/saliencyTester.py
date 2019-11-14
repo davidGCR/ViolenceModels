@@ -5,7 +5,7 @@ import torchvision
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
-import saliencyModel
+from .saliencyModel  import build_saliency_model
 import random
 from operator import itemgetter
 from loss import Loss
@@ -27,17 +27,18 @@ class SaliencyTester():
         self.numDiPerVideos = numDiPerVideos
         self.threshold = threshold
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.net = saliencyModel.build_saliency_model(num_classes=num_classes)
+        self.net = build_saliency_model(num_classes=num_classes)
         self.net = self.net.to(device)
         self.net = torch.load(saliency_model_file)
         self.net.eval()
 
     def compute_sal_map(self, data):
-        print("-" * 150)
-        di_images, labels, video_name, bbox_segments = data  # dataset load [bs,ndi,c,w,h]
+        # """Compute mask from dinamyc image"""
+          # dataset load [bs,ndi,c,w,h]
         # print('video: ',video_name[0])
-        tracker.plotBoundingBoxSegment(video_name[0],bbox_segments)
+        # tracker.plotBoundingBoxSegment(video_name[0],bbox_segments)
         # print( "inputs, labels: ", type(di_images), di_images.size(), type(labels), labels.size() )
+        di_images, labels, video_name, bbox_segments = data
         if self.numDiPerVideos > 1:
             di_images = torch.squeeze(di_images, 0)  # get one di [ndi,c,w,h
         # if numDiPerVideos>1:
@@ -46,6 +47,19 @@ class SaliencyTester():
         di_images, labels = Variable(di_images.cuda()), Variable(labels.cuda())
         masks, _ = self.net(di_images, labels)
         return di_images, masks
+
+    def compute_mask(self, di_images, labels):
+        """Compute mask from dinamyc image"""
+          # dataset load [bs,ndi,c,w,h]
+        if self.numDiPerVideos > 1:
+            di_images = torch.squeeze(di_images, 0)  # get one di [ndi,c,w,h
+        # if numDiPerVideos>1:
+        #     inputs = inputs.permute(1, 0, 2, 3, 4)
+        #     inputs = torch.squeeze(inputs, 0)  #get one di [bs,c,w,h]
+        di_images, labels = Variable(di_images.cuda()), Variable(labels.cuda())
+        masks, _ = self.net(di_images, labels)
+        return masks
+
 
     def thresholding_cv2(self, x, rgb=True):
         x = 255*x #between 0-255
@@ -60,6 +74,10 @@ class SaliencyTester():
         # plt.imshow(th)
         
         return th
+
+    def repeat_channels3(self, img):
+        img = np.stack([img, img, img], axis=2)
+        return img
 
     def histogram(self,x):
         img1 = x / 2 + 0.5
@@ -99,7 +117,7 @@ class SaliencyTester():
     def normalize_ndarray(self, img):
         _min = np.amin(img)
         _max = np.amax(img)
-        print("min:", _min, ", max:", _max)
+        # print("min:", _min, ", max:", _max)
         return (img - _min) / (_max - _min)
 
     def imshow(self, img):

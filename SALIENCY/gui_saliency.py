@@ -17,7 +17,7 @@ def tensor2numpy(x):
     x = x / 2 + 0.5
     x = x.numpy()
     x = np.transpose(x, (1, 2, 0))
-    print('x: ', type(x), x.shape)
+    # print('x: ', type(x), x.shape)
     return x
 
 def get_anomalous_video(video_test_name, reduced = True):
@@ -49,7 +49,53 @@ def get_anomalous_video(video_test_name, reduced = True):
         bbox_infos_frames.append(info_frame)
     
     return path, label, bbox_infos_frames, num_frames
- 
+
+
+def findContours(img, remove_fathers = True):
+    # Detect edges using Canny
+    # canny_output = cv2.Canny(src_gray, threshold, threshold * 2)
+    # Find contours
+    # color = cv2.Scalar(0, 255, 0)
+    contours, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    
+    # Draw contours
+    drawing = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
+    if remove_fathers:
+        removed = []
+        for idx,contour in enumerate(contours):
+            if hierarchy[0, idx, 3] == -1:
+                removed.append(contour)
+        contours = removed
+    print('contours: ', len(contours))
+    for i in range(len(contours)):
+        cv2.drawContours(drawing, contours, i, (0, 255, 0), 2, cv2.LINE_8, hierarchy, 0)
+    # Show in a window
+    # cv2.imshow('Contours', drawing)
+    return drawing, contours
+
+def process_mask(img):
+    kernel_exp = np.ones((5, 5), np.uint8)
+    img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel_exp)
+    kernel_dil = np.ones((7, 7), np.uint8)
+    img = cv2.dilate(img, kernel_dil, iterations=1)
+    kernel_clo = np.ones((11, 11), np.uint8)
+    img = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel_clo)
+    return img
+
+def bboxes_from_contours(img, contours):
+    contours_poly = [None]*len(contours)
+    boundRect = [None] * len(contours)
+    for i, c in enumerate(contours):
+        contours_poly[i] = cv2.approxPolyDP(c, 3, True)
+        boundRect[i] = cv2.boundingRect(contours_poly[i])
+    drawing = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
+    
+    for i in range(len(contours)):
+        color_red = (0,0,255)
+        # cv2.drawContours(drawing, contours_poly, i, color)
+        cv2.rectangle(drawing, (int(boundRect[i][0]), int(boundRect[i][1])), (int(boundRect[i][0]+boundRect[i][2]), int(boundRect[i][1]+boundRect[i][3])), color_red, 2)
+    return drawing
+
 def __main__():
     parser = argparse.ArgumentParser()
     parser.add_argument("--saliencyModelFile", type=str)
@@ -86,11 +132,13 @@ def __main__():
     
     path, label, bbox_infos_frames, num_frames = get_anomalous_video('Burglary048', reduced=True)
     print(path, label, num_frames)
-    for i, data in enumerate( dataloaders_dict['test'], 0):
+    for i, data in enumerate(dataloaders_dict['test'], 0):
+        print("-" * 150)
+        print(label)
         di_images, masks = tester.compute_sal_map(data)
 
-        print('di_images: ', type(di_images), di_images.size())
-        print('masks: ', type(masks), masks.size())
+        # print('di_images: ', type(di_images), di_images.size())
+        # print('masks: ', type(masks), masks.size())
         di_images = torch.squeeze(di_images, 0).cpu()
         threshold_mask = masks.clone()
         
@@ -106,14 +154,29 @@ def __main__():
         threshold_mask = tester.normalize_tensor(threshold_mask)
         threshold_mask = tensor2numpy(threshold_mask)
         threshold_mask = tester.thresholding_cv2(threshold_mask)
-        print('threshold_mask: ', type(threshold_mask), threshold_mask.shape)
+        # print('threshold_mask: ', type(threshold_mask), threshold_mask.shape)
 
-        # threshold_mask = threshold_mask.repeat(3, 1, 1) 
+        morpho = process_mask(threshold_mask[:,:, 0])  # 0 channels
+        morpho = tester.repeat_channels3(morpho)
+        # print('morpho: ', morpho.shape)
+        contours_img, contours = findContours(morpho[:,:,0]) # rgb
+        bboxes = bboxes_from_contours(contours_img, contours)
         
-        img_concate_Hori=np.concatenate((di_images,masks, threshold_mask),axis=1)
-        cv2.imshow('eefef', img_concate_Hori)
-        if cv2.waitKey(50) & 0xFF == ord('q'):
-            break
+        PADDING = np.ones((224,10,3))
+        img_concate_Hori = np.concatenate((di_images, PADDING, masks, PADDING, threshold_mask, PADDING,
+                                            morpho, PADDING, contours_img, PADDING, bboxes), axis=1)
+        
+        while (1):
+            cv2.imshow('eefef', img_concate_Hori)
+            k = cv2.waitKey(33)
+            if k == -1:
+                continue
+            if k == ord('a'):
+                break
+            if k == ord('q'):
+                sys.exit('finish!!!')
+        # if cv2.waitKey(70) & 0xFF == ord('q'):
+        #     break
        
     # saliencyTester.test(saliency_model_file, num_classes, dataloaders_dict['test'], test_names, input_size, saliency_model_config, numDiPerVideos, threshold)
 
