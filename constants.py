@@ -29,3 +29,11 @@ OPERATION_TESTING = 'testing'
 
 JOIN_TEMP_MAX_POOL = 'tempMaxPool'
 JOIN_CONCATENATE = 'cat'
+
+# frame, flac, xmin, ymin, xmax, ymax
+IDX_FRAME_NAME = 0
+IDX_FLAC = 1
+IDX_XMIN = 2
+IDX_YMIN = 3
+IDX_XMAX = 4
+IDX_YMAX = 6

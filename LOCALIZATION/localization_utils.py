@@ -8,6 +8,8 @@ import cv2
 import math
 from point import Point
 from bounding_box import BoundingBox
+from YOLOv3 import yolo_inference
+import torch
 # import point.Point as Point
 
 
@@ -29,19 +31,40 @@ def join2NearBBoxes(bbox1, bbox2, max_distance):
 
 # def isInside(center, box):
 #     return center[]<
+def personDetectionInSegment(video_name, segment_info):
+    ##segment_info shape: (numframes, 6)
+    frame_name = str(segment_info[0,constants.IDX_FRAME_NAME][0])
+    # print('segment_info: ', )
+    video_name = os.path.join(video_name, frame_name)
+    print(video_name)
+    img_size = 416
+    weights_path = "YOLOv3/weights/yolov3.weights"
+    class_path = "YOLOv3/data/coco.names"
+    model_def = "YOLOv3/config/yolov3.cfg"
+    conf_thres = 0.8
+    nms_thres = 0.4
+    model, classes = yolo_inference.initializeYoloV3(img_size, class_path, model_def, weights_path)
+    img = yolo_inference.preProcessImage(video_name, img_size)
+    
+    detections = yolo_inference.inference(model, img, conf_thres, nms_thres)
+    print('detections: ', len(detections))
+    if detections is not None:
+        detections = yolo_inference.rescale_boxes(detections[0], img_size, img.shape[:2])
+        unique_labels = detections[:, -1].cpu().unique()
+        for x1, y1, x2, y2, conf, cls_conf, cls_pred in detections:
+            print("\t+ Label: %s, Conf: %.5f" % (classes[int(cls_pred)], cls_conf.item()))
+            npimg = torch.squeeze(img,0)
+            npimg = tensor2numpy(npimg)
+            print('img preprocesed: ', type(npimg), npimg.shape)
+            cv2.imshow('fds', npimg)    
+            # cv2.rectangle(img,(box.pmin.x,box.pmin.y),(box.pmax.x,box.pmax.y),color,2)
 
+    
+    return 0
 
 def distance(p1, p2):
     distance = math.sqrt(((p1.x - p2.x)** 2) + ((p1.y - p2.y)** 2))
     return distance
-# def distance(p1, p2):
-#     distance = math.sqrt(((p1[0] - p2[0])** 2) + ((p1[1] - p2[1])** 2))
-#     return distance
-
-# def center(xmin, ymin, xmax, ymax):
-#     xcent_1 = xmin + int((xmax - xmin) / 2)
-#     ycent_1 = ymin + int((ymax - ymin) / 2)
-#     return xcent_1, ycent_1
 
 def computeBoundingBoxFromMask(mask):
     """
@@ -56,7 +79,7 @@ def computeBoundingBoxFromMask(mask):
     img, contours = findContours(img, remove_fathers=True)
     
     bboxes = bboxes_from_contours(img, contours)
-    print(len(bboxes),bboxes)
+    # print(len(bboxes),bboxes)
     return bboxes
 
 def process_mask(img):
@@ -113,7 +136,7 @@ def bboxes_from_contours(img, contours):
     # drawing = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
     bboxes = []
     for i, rect in enumerate(boundRect):
-        print('REct: ', rect)
+        # print('REct: ', rect)
         bb = cvRect2BoundingBox(rect)
         bboxes.append(bb)
     #     color_red = (0,0,255)

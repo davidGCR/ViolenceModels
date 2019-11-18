@@ -60,6 +60,9 @@ def __main__():
         print("-" * 150)
         di_images, labels, video_name, bbox_segments = data
         print(video_name)
+        bbox_segments = np.array(bbox_segments)
+        print('bbox_segments: ', bbox_segments.shape)
+        localization_utils.personDetectionInSegment(video_name[0], bbox_segments[0])
         masks = tester.compute_mask(di_images, labels)
         
         masks = torch.squeeze(masks,0)
@@ -67,10 +70,10 @@ def __main__():
         masks = tester.normalize_tensor(masks)
         # masks = masks.repeat(3, 1, 1)
         masks = tensor2numpy(masks)
-        print('masks numpy', masks.shape)
+        # print('masks numpy', masks.shape)
         bboxes = localization_utils.computeBoundingBoxFromMask(masks)
         
-        print('bboxes 0: ', bboxes[0])
+        # print('bboxes 0: ', bboxes[0])
         
         # print(bboxes)
         img = localization_utils.plotBBoxesOnImage(masks,bboxes)
@@ -82,7 +85,7 @@ def __main__():
             if k == ord('a'):
                 break
             if k == ord('q'):
-                localization_utils.tuple2BoundingBox(bboxes[0])
+                # localization_utils.tuple2BoundingBox(bboxes[0])
                 sys.exit('finish!!!')
 
         

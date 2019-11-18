@@ -65,6 +65,7 @@ class AnomalyDataset(Dataset):
         for segment in video_segments:
             bbox_infos_frames = []
             for frame in segment:
+                # print('frame: ', frame)
                 num_frame = int(frame[len(frame) - 7:-4])
                 if num_frame != int(data[num_frame, 5]):
                     sys.exit('Houston we have a problem: index frame does not equal to the bbox file!!!')
@@ -75,6 +76,7 @@ class AnomalyDataset(Dataset):
                 ymin= int(data[num_frame, 2])
                 xmax = int(data[num_frame, 3])
                 ymax = int(data[num_frame, 4])
+                # print(type(frame), type(flac), type(xmin), type(ymin))
                 info_frame = [frame, flac, xmin, ymin, xmax, ymax]
                 bbox_infos_frames.append(info_frame)
             bbox_segments.append(bbox_infos_frames)
@@ -120,8 +122,9 @@ class AnomalyDataset(Dataset):
         # print(vid_name)
         label = self.labels[idx]
         dinamycImages = []
-        sequences, seqLen, bbox_segments = self.getVideoSegments(vid_name, idx)
-        
+        sequences, seqLen, bbox_segments = self.getVideoSegments(vid_name, idx) # bbox_segments: (1, 16, 6)= (no segments,no frames segment,info)
+        # bbox_segments2 = np.array(bbox_segments)
+        # print('bbox_segments: ',bbox_segments2)
         for seq in sequences:
             frames = []
             for frame in seq:
